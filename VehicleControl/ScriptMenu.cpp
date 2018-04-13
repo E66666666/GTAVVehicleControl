@@ -78,8 +78,14 @@ vector<string> VehicleDoorText {
     "All Doors"
 };
 
+vector<string> GenericOnOff {
+    "Off",
+    "On"
+};
+
 int currentVehicleIndex = 0;
 int currentDoorIndex = 0;
+int currentHazard = 0;
 
 void onMain() {
     menu.ReadSettings();
@@ -155,6 +161,8 @@ void update_mainmenu() {
     bool areLowBeamsOn_ = areLowBeamsOn == TRUE;
     bool areHighBeamsOn_ = areHighBeamsOn == TRUE;
 
+    bool isAlarm = VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh);
+    
 
     if (menu.BoolOption("Persistent", isPersistent)) {
         if (isPersistent) {
@@ -221,6 +229,31 @@ void update_mainmenu() {
                 }
             }
         }
+    }
+
+    if (menu.BoolOption("Alarm", isAlarm)) {
+        if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
+            VEHICLE::SET_VEHICLE_ALARM(veh, false);
+        }
+        else {
+            VEHICLE::SET_VEHICLE_ALARM(veh, true);
+            VEHICLE::START_VEHICLE_ALARM(veh);
+        }
+    }
+
+    int lastHazard = currentHazard;
+    if (menu.StringArray("Hazards", GenericOnOff, lastHazard)) {
+        if (lastHazard == currentHazard) {
+            if (lastHazard) {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
+            }
+            else {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
+            }
+        }
+        currentHazard = lastHazard % 2;
     }
 }
 
