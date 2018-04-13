@@ -51,10 +51,10 @@ void main() {
     settingsMenuFile = Paths::GetModuleFolder(Paths::GetOurModuleHandle()) + modDir + "\\settings_menu.ini";
     menu.SetFiles(settingsMenuFile);
     logger.Write(INFO, "Loading " + settingsMenuFile);
+    menu.ReadSettings();
 
     menu.RegisterOnMain(std::bind(onMain));
     menu.RegisterOnExit(std::bind(onExit));
-    menu.ReadSettings();
 
     while (true) {
         update_game();

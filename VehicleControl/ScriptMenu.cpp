@@ -15,7 +15,7 @@ extern Vehicle lastVehicle;
 
 extern vector<Vehicle> managedVehicles;
 
-const int MaxDoorIdx = 5;
+const int NumDoors = 6;
 
 enum class LockStatus : int {
     None,
@@ -193,21 +193,21 @@ void update_mainmenu() {
     int lastDoorIndex = currentDoorIndex;
     if (menu.StringArray("Door", VehicleDoorText, currentDoorIndex)) {
         if (lastDoorIndex == currentDoorIndex) {
-            if (currentDoorIndex > MaxDoorIdx) {
+            if (currentDoorIndex >= NumDoors) {
                 bool isAnyDoorOpen = false;
-                for (int i = 0; i < MaxDoorIdx; ++i) {
+                for (int i = 0; i < NumDoors; ++i) {
                     if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, i) > 0.0f) {
                         isAnyDoorOpen = true;
                         break;
                     }
                 }
                 if (isAnyDoorOpen) {
-                    for (int i = 0; i < MaxDoorIdx; ++i) {
+                    for (int i = 0; i < NumDoors; ++i) {
                         VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, i, false);
                     }
                 }
                 else {
-                    for (int i = 0; i < MaxDoorIdx; ++i) {
+                    for (int i = 0; i < NumDoors; ++i) {
                         VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, i, false, false);
                     }
                 }
