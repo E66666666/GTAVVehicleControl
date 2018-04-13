@@ -130,7 +130,7 @@ void update_mainmenu() {
         string brand = p.first;
         string name = p.second;
         string plate = VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(v);        
-        string finalName = fmt("%s %s (%s)", brand, name, plate);
+        string finalName = fmt("%s (%s)", name, plate);
         managedVehicleNames.push_back(finalName);
     }
 
