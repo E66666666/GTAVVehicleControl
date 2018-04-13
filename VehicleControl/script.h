@@ -3,7 +3,7 @@
 
 #define DISPLAY_VERSION "v1.0.0"
 
-const char* const modDir  = "\\GTAVMenuExample";
+const char* const modDir  = "\\VehicleControl";
 
 void ScriptMain();
 void onMain();
