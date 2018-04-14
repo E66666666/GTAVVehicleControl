@@ -80,6 +80,7 @@ vector<string> VehicleDoorBones{
     "door_pside_r",
     "bonnet",
     "boot",
+    "vc_all"
 };
 
 enum class BombBayAction {
@@ -175,11 +176,14 @@ pair<string, string> GetVehicleNames(Vehicle vehicle) {
 }
 
 bool HasBone(Entity e, char* bone) {
+    if (strcmp(bone, "vc_all") == 0) 
+        return true;
     return ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME(e, bone) != -1;
 }
 
 bool HasDoors(Entity e) {
     for (auto b: VehicleDoorBones) {
+        if (b == "vc_all") continue;
         if (HasBone(e, (char*)b.c_str())) {
             return true;
         }
@@ -415,11 +419,14 @@ void update_mainmenu() {
                 }
             }
             else {
-                if (mVeh.DoorIndex < NumDoors) {
+                // lastDoorId = 4
+                // doorIndex == 5 for "Just changed to Trunk)
+
+                if (mVeh.DoorIndex < VehicleDoorBones.size()) {
                     if (mVeh.DoorIndex > lastDoorIndex) {
                         while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.DoorIndex].c_str())) {
                             mVeh.DoorIndex++;
-                            if (mVeh.DoorIndex >= NumDoors) {
+                            if (mVeh.DoorIndex >= VehicleDoorBones.size()) {
                                 mVeh.DoorIndex = 0;
                             }
                         }
@@ -428,7 +435,7 @@ void update_mainmenu() {
                         while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.DoorIndex].c_str())) {
                             mVeh.DoorIndex--;
                             if (mVeh.DoorIndex < 0) {
-                                mVeh.DoorIndex = NumDoors - 1;
+                                mVeh.DoorIndex = VehicleDoorBones.size() - 1;
                             }
                         }
                     }
