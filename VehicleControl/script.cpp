@@ -56,6 +56,8 @@ void main() {
     menu.RegisterOnMain(std::bind(onMain));
     menu.RegisterOnExit(std::bind(onExit));
 
+    initRadioStations();
+
     while (true) {
         update_game();
         update_managedVehicles();

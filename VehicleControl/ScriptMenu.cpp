@@ -3,6 +3,7 @@
 #include <menu.h>
 #include "Util/StringFormat.h"
 #include "Util/UIUtils.h"
+#include "Util/Logger.hpp"
 
 using namespace std;
 
@@ -72,6 +73,15 @@ vector<string> VehicleDoorText {
     "All Doors"
 };
 
+vector<string> VehicleDoorBones{
+    "door_dside_f",
+    "door_pside_f",
+    "door_dside_r",
+    "door_pside_r",
+    "bonnet",
+    "boot",
+};
+
 enum class BombBayAction {
     Open,
     Close
@@ -108,6 +118,11 @@ vector<string> BlinkerText {
     "Hazard"
 };
 
+// Nice name, station number, internal name
+unordered_map<string, pair<int, string>> RadioStations;
+// Nice names!
+vector<string> RadioStationNames;
+
 int currentVehicleIndex = 0;
 
 //int currentDoorIndex = 0;
@@ -119,6 +134,21 @@ void onMain() {
 
 void onExit() {
 
+}
+
+void initRadioStations() {
+    for (int i = 0; i < 256; i++) {
+        if (strcmp(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)), "NULL") != 0) {
+            RadioStations.try_emplace(string(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i))), make_pair(i, string(AUDIO::GET_RADIO_STATION_NAME(i)) ));
+            RadioStationNames.push_back(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)));
+        }
+    }
+    RadioStations.try_emplace("Radio Off", make_pair( 255, "OFF" ));
+    RadioStationNames.push_back("Radio Off");
+
+    for (auto it = RadioStations.begin(); it != RadioStations.end(); ++it) {
+        logger.Write(INFO, "%d\t%s %s", it->second.first, it->second.second.c_str(), it->first.c_str());
+    }
 }
 
 string getGxtName(Hash hash) {
@@ -146,6 +176,15 @@ pair<string, string> GetVehicleNames(Vehicle vehicle) {
 
 bool HasBone(Entity e, char* bone) {
     return ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME(e, bone) != -1;
+}
+
+bool HasDoors(Entity e) {
+    for (auto b: VehicleDoorBones) {
+        if (HasBone(e, (char*)b.c_str())) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void update_mainmenu() {
@@ -207,12 +246,24 @@ void update_mainmenu() {
         }
     }
 
-    if (menu.BoolOption("Low beams", areLowBeamsOn_)) {
+    int lastRadio = mVeh.RadioIndex;
+    if (menu.StringArray("Radio", RadioStationNames, mVeh.RadioIndex)) {
+        if (lastRadio == mVeh.RadioIndex) {
+            AUDIO::SET_VEHICLE_RADIO_ENABLED(veh, true);
+            AUDIO::SET_VEHICLE_RADIO_LOUD(veh, true);
+            AUDIO::_0xC1805D05E6D4FE10(veh);
+            AUDIO::SET_VEH_RADIO_STATION(veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
+        }
+    }
+
+    if (menu.BoolOption("Lights", areLowBeamsOn_)) {
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
-    if (menu.BoolOption("High beams", areHighBeamsOn_)) {
-        VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
+    if (areLowBeamsOn_) {
+        if (menu.BoolOption("High beams", areHighBeamsOn_)) {
+            VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
+        }
     }
 
     int lastBlinker = mVeh.BlinkerIndex;
@@ -266,12 +317,9 @@ void update_mainmenu() {
     }
     
     if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r")) {
-        //int oldIndex = mVeh.BombBayIndex;
-        if (menu.Option("Toggle bomb bays"/*, BombBayText, oldIndex*/)) {
-            //if (oldIndex != mVeh.BombBayIndex) {
-                mVeh.BombBayIndex++;
-            //}
-            mVeh.BombBayIndex %= 2;
+        if (menu.Option("Toggle bomb bays")) {
+            mVeh.BombBayIndex++;
+            mVeh.BombBayIndex %= 2; 
             if (mVeh.BombBayIndex == 0) {
                 VEHICLE::CLOSE_BOMB_BAY_DOORS(veh);
             }
@@ -281,43 +329,66 @@ void update_mainmenu() {
         }
     }
 
-    int bogus = 1;
-    if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
-        if (bogus != 1) {
-            lockStatusIndex++;
+    if (HasDoors(veh)) {
+        
+        int bogus = 1;
+        if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
+            if (bogus != 1) {
+                lockStatusIndex++;
+            }
+            lockStatusIndex = lockStatusIndex % 2;
+            VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
         }
-        lockStatusIndex = lockStatusIndex % 2;
-        VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
-    }
 
-    int lastDoorIndex = mVeh.DoorIndex;
-    if (menu.StringArray("Open/close doors", VehicleDoorText, mVeh.DoorIndex)) {
-        if (lastDoorIndex == mVeh.DoorIndex) {
-            if (mVeh.DoorIndex >= NumDoors) {
-                bool isAnyDoorOpen = false;
-                for (int i = 0; i < NumDoors; ++i) {
-                    if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, i) > 0.0f) {
-                        isAnyDoorOpen = true;
-                        break;
-                    }
-                }
-                if (isAnyDoorOpen) {
+        int lastDoorIndex = mVeh.DoorIndex;
+        if (menu.StringArray("Open/close doors", VehicleDoorText, mVeh.DoorIndex)) {
+            if (lastDoorIndex == mVeh.DoorIndex) {
+                if (mVeh.DoorIndex >= NumDoors) {
+                    bool isAnyDoorOpen = false;
                     for (int i = 0; i < NumDoors; ++i) {
-                        VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, i, false);
+                        if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, i) > 0.0f) {
+                            isAnyDoorOpen = true;
+                            break;
+                        }
+                    }
+                    if (isAnyDoorOpen) {
+                        for (int i = 0; i < NumDoors; ++i) {
+                            VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, i, false);
+                        }
+                    }
+                    else {
+                        for (int i = 0; i < NumDoors; ++i) {
+                            VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, i, false, false);
+                        }
                     }
                 }
                 else {
-                    for (int i = 0; i < NumDoors; ++i) {
-                        VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, i, false, false);
+                    if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, mVeh.DoorIndex) > 0.0f) {
+                        VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, mVeh.DoorIndex, false);
+                    }
+                    else {
+                        VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, mVeh.DoorIndex, false, false);
                     }
                 }
             }
             else {
-                if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, mVeh.DoorIndex) > 0.0f) {
-                    VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, mVeh.DoorIndex, false);
-                }
-                else {
-                    VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, mVeh.DoorIndex, false, false);
+                if (mVeh.DoorIndex < NumDoors) {
+                    if (mVeh.DoorIndex > lastDoorIndex) {
+                        while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.DoorIndex].c_str())) {
+                            mVeh.DoorIndex++;
+                            if (mVeh.DoorIndex >= NumDoors) {
+                                mVeh.DoorIndex = 0;
+                            }
+                        }
+                    }
+                    else if (mVeh.DoorIndex < lastDoorIndex) {
+                        while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.DoorIndex].c_str())) {
+                            mVeh.DoorIndex--;
+                            if (mVeh.DoorIndex < 0) {
+                                mVeh.DoorIndex = NumDoors - 1;
+                            }
+                        }
+                    }
                 }
             }
         }

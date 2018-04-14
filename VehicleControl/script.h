@@ -9,12 +9,16 @@ void ScriptMain();
 void onMain();
 void onExit();
 void update_menu();
+void initRadioStations();
 
 class ManagedVehicle {
 public:
     ManagedVehicle(Vehicle vehicle) : Vehicle(vehicle),
                                       DoorIndex(0),
-                                      BlinkerIndex(0) {}
+                                      BlinkerIndex(0),
+                                      BombBayIndex(0),
+                                      RadioIndex(0) {}
+
     bool operator==(const ManagedVehicle& rhs) {
         return rhs.Vehicle == this->Vehicle;
     }
@@ -22,4 +26,5 @@ public:
     int DoorIndex;
     int BlinkerIndex;
     int BombBayIndex;
+    int RadioIndex;
 };
