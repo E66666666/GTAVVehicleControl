@@ -1,5 +1,5 @@
 #pragma once
-#include "menu.h"
+#include <inc/types.h>
 
 #define DISPLAY_VERSION "v1.0.0"
 
@@ -11,3 +11,16 @@ void onExit();
 void onRight();
 void onLeft();
 void update_menu();
+
+class ManagedVehicle {
+public:
+    ManagedVehicle(Vehicle vehicle) : Vehicle(vehicle),
+                                      DoorIndex(0),
+                                      HazardIndex(0) {}
+    bool operator==(const ManagedVehicle& rhs) {
+        return rhs.Vehicle == this->Vehicle;
+    }
+    Vehicle Vehicle;
+    int DoorIndex;
+    int HazardIndex;
+};

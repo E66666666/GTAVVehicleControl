@@ -17,7 +17,7 @@ Ped playerPed = 0;
 Vehicle currentVehicle = 0;
 Vehicle lastVehicle = 0;
 
-std::vector<Vehicle> managedVehicles;
+std::vector<ManagedVehicle> managedVehicles;
 
 void update_game() {
     player = PLAYER::PLAYER_ID();
@@ -29,14 +29,14 @@ void update_game() {
 
     auto foundVehicle = std::find(managedVehicles.begin(), managedVehicles.end(), currentVehicle);
     if (foundVehicle == managedVehicles.end()) {
-        managedVehicles.push_back(currentVehicle);
+        managedVehicles.push_back(ManagedVehicle(currentVehicle));
     }
 }
 
 void update_managedVehicles() {
-    std::vector<Vehicle> stale;
+    std::vector<ManagedVehicle> stale;
     for (auto v : managedVehicles) {
-        if (!ENTITY::DOES_ENTITY_EXIST(v))
+        if (!ENTITY::DOES_ENTITY_EXIST(v.Vehicle))
             stale.push_back(v);
     }
 

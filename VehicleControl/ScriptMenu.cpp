@@ -13,7 +13,7 @@ extern Ped playerPed;
 extern Vehicle currentVehicle;
 extern Vehicle lastVehicle;
 
-extern vector<Vehicle> managedVehicles;
+extern vector<ManagedVehicle> managedVehicles;
 
 const int NumDoors = 6;
 
@@ -78,8 +78,9 @@ vector<string> GenericOnOff {
 };
 
 int currentVehicleIndex = 0;
-int currentDoorIndex = 0;
-int currentHazard = 0;
+
+//int currentDoorIndex = 0;
+//int currentHazard = 0;
 
 void onMain() {
     menu.ReadSettings();
@@ -124,25 +125,26 @@ void update_mainmenu() {
     menu.Title("Vehicle Control");
     menu.Subtitle(string("~b~") + DISPLAY_VERSION);
 
-    vector<string> managedVehicleNames;
-    for (auto v : managedVehicles) {
-        auto p = GetVehicleNames(v);
-        string brand = p.first;
-        string name = p.second;
-        string plate = VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(v);        
-        string finalName = fmt("%s (%s)", name, plate);
-        managedVehicleNames.push_back(finalName);
-    }
-
     if (managedVehicles.empty()) {
         menu.Option("No managed vehicles!");
         return;
     }
-    else {
-        menu.StringArray("Vehicle", managedVehicleNames, currentVehicleIndex);
+
+    if (currentVehicleIndex >= managedVehicles.size())
+        currentVehicleIndex = managedVehicles.size() - 1;
+
+    vector<string> managedVehicleNames;
+    for (auto v : managedVehicles) {
+        auto p = GetVehicleNames(v.Vehicle);
+        string brand = p.first;
+        string name = p.second;
+        string plate = VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(v.Vehicle);        
+        string finalName = fmt("%s (%s)", name, plate);
+        managedVehicleNames.push_back(finalName);
     }
 
-    Vehicle veh = managedVehicles[currentVehicleIndex];
+    ManagedVehicle& mVeh = managedVehicles[currentVehicleIndex];
+    Vehicle veh = mVeh.Vehicle;
     bool isPersistent = ENTITY::IS_ENTITY_A_MISSION_ENTITY(veh);
     bool isEngineOn = VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh);
     
@@ -156,7 +158,8 @@ void update_mainmenu() {
     bool areHighBeamsOn_ = areHighBeamsOn == TRUE;
 
     bool isAlarm = VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh);
-    
+
+    menu.StringArray("Vehicle", managedVehicleNames, currentVehicleIndex);
 
     if (menu.BoolOption("Persistent", isPersistent)) {
         if (isPersistent) {
@@ -199,10 +202,10 @@ void update_mainmenu() {
         VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
     }
 
-    int lastDoorIndex = currentDoorIndex;
-    if (menu.StringArray("Open/close doors", VehicleDoorText, currentDoorIndex)) {
-        if (lastDoorIndex == currentDoorIndex) {
-            if (currentDoorIndex >= NumDoors) {
+    int lastDoorIndex = mVeh.DoorIndex;
+    if (menu.StringArray("Open/close doors", VehicleDoorText, mVeh.DoorIndex)) {
+        if (lastDoorIndex == mVeh.DoorIndex) {
+            if (mVeh.DoorIndex >= NumDoors) {
                 bool isAnyDoorOpen = false;
                 for (int i = 0; i < NumDoors; ++i) {
                     if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, i) > 0.0f) {
@@ -222,11 +225,11 @@ void update_mainmenu() {
                 }
             }
             else {
-                if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, currentDoorIndex) > 0.0f) {
-                    VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, currentDoorIndex, false);
+                if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, mVeh.DoorIndex) > 0.0f) {
+                    VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, mVeh.DoorIndex, false);
                 }
                 else {
-                    VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, currentDoorIndex, false, false);
+                    VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, mVeh.DoorIndex, false, false);
                 }
             }
         }
@@ -242,9 +245,9 @@ void update_mainmenu() {
         }
     }
 
-    int lastHazard = currentHazard;
+    int lastHazard = mVeh.HazardIndex;
     if (menu.StringArray("Hazards", GenericOnOff, lastHazard)) {
-        if (lastHazard == currentHazard) {
+        if (lastHazard == mVeh.HazardIndex) {
             if (lastHazard) {
                 VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
                 VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
@@ -254,7 +257,7 @@ void update_mainmenu() {
                 VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
             }
         }
-        currentHazard = lastHazard % 2;
+        mVeh.HazardIndex = lastHazard % 2;
     }
 }
 
