@@ -29,14 +29,8 @@ enum class LockStatus : int {
 };
 
 vector<LockStatus> LockStatuses {
-    LockStatus::None,
     LockStatus::Unlocked,
     LockStatus::Locked,
-    LockStatus::LockedForPlayer,
-    LockStatus::StickPlayerInside,
-    LockStatus::CanBeBrokenInto,
-    LockStatus::CanBeBrokenIntoPersist,
-    LockStatus::CannotBeTriedToEnter,
 };
 
 unordered_map<LockStatus, string> LockStatusText {
@@ -184,22 +178,29 @@ void update_mainmenu() {
     }
 
     int bogus = 1;
-    if (menu.StringArray("Lock", { "", LockStatusText[lockStatus] , "" }, bogus)) {
-        if (bogus == 0) lockStatusIndex--;
-        if (bogus == 2) lockStatusIndex++;
+    if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
+        if (bogus == 0) {
+            lockStatusIndex--;
+        }
+        if (bogus == 2) {
+            lockStatusIndex++;
+        }
+        if (bogus != 1) {
+            lockStatusIndex %= 2;
+        }
         VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
     }
 
-    if (menu.BoolOption("Low Beams", areLowBeamsOn_)) {
+    if (menu.BoolOption("Low beams", areLowBeamsOn_)) {
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
-    if (menu.BoolOption("High Beams", areHighBeamsOn_)) {
+    if (menu.BoolOption("High beams", areHighBeamsOn_)) {
         VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
     }
 
     int lastDoorIndex = currentDoorIndex;
-    if (menu.StringArray("Door", VehicleDoorText, currentDoorIndex)) {
+    if (menu.StringArray("Open/close doors", VehicleDoorText, currentDoorIndex)) {
         if (lastDoorIndex == currentDoorIndex) {
             if (currentDoorIndex >= NumDoors) {
                 bool isAnyDoorOpen = false;
