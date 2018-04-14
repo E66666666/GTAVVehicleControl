@@ -187,12 +187,51 @@ bool HasDoors(Entity e) {
     return false;
 }
 
+string OptionNoVehicles = "No managed vehicles!";
+vector<string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
+
+string OptionVehicle = "Vehicle";
+string OptionVehicleDescriptionPart = "Currently controlled vehicle." ;
+
+string OptionPersistent = "Persistent";
+vector<string> OptionPersistentDescription = { "Prevent the vehicle from being removed by the game." };
+
+string OptionEngineOn = "Engine on";
+vector<string> OptionEngineOnDescription = { "Pre-warm the car for those cold winter days." };
+
+string OptionRadio = "Radio";
+vector<string> OptionRadioDescription = { "Did someone say hearing loss?" };
+
+string OptionLights = "Lights";
+vector<string> OptionLightsDescription = { "Honey did you forget to turn the lights off again?" };
+
+string OptionFullbeam = "Full beam";
+vector<string> OptionFullbeamDescription = { "Blind yourself remotely!" };
+
+string OptionBlinkers = "Indicators";
+vector<string> OptionBlinkersDescription = { "More blinkenlights are always better." };
+
+string OptionAlarm = "Alarm";
+vector<string> OptionAlarmDescription = { "For if you need to scare your neighbors' kids from your car." };
+
+string OptionRoof = "Toggle roof";
+vector<string> OptionRoofDescription = { "Your convertible is parked outside, it's starting to rain, but you can't get up." };
+
+string OptionBombbay = "Toggle bomb bays";
+vector<string> OptionBombbayDescription = { "Oh, that's why she was flying like a brick!" };
+
+string OptionLock = "Lock doors";
+vector<string> OptionLockDescription = { "It would suck having your car stolen!" };
+
+string OptionDoors = "Open/close doors";
+vector<string> OptionDoorsDescription = { "Steal the show at a car meet." };
+
 void update_mainmenu() {
     menu.Title("Vehicle Control");
     menu.Subtitle(string("~b~") + DISPLAY_VERSION);
 
     if (managedVehicles.empty()) {
-        menu.Option("No managed vehicles!");
+        menu.Option(OptionNoVehicles, OptionNoVehiclesDescription);
         return;
     }
 
@@ -225,9 +264,13 @@ void update_mainmenu() {
 
     bool isAlarm = VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh);
 
-    menu.StringArray("Vehicle", managedVehicleNames, currentVehicleIndex);
+    vector<string> OptionVehicleDescription = { 
+        OptionVehicleDescriptionPart, 
+        fmt("%d / %d", currentVehicleIndex + 1, managedVehicleNames.size()) 
+    };
+    menu.StringArray(OptionVehicle, managedVehicleNames, currentVehicleIndex, OptionVehicleDescription);
 
-    if (menu.BoolOption("Persistent", isPersistent)) {
+    if (menu.BoolOption(OptionPersistent, isPersistent, OptionPersistentDescription)) {
         if (isPersistent) {
             ENTITY::SET_ENTITY_AS_MISSION_ENTITY(veh, true, false);
         }
@@ -237,7 +280,7 @@ void update_mainmenu() {
         }
     }
 
-    if (menu.BoolOption("Engine on", isEngineOn)) {
+    if (menu.BoolOption(OptionEngineOn, isEngineOn, OptionEngineOnDescription)) {
         if (VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh)) {
             VEHICLE::SET_VEHICLE_ENGINE_ON(veh, false, true, true);
         }
@@ -247,7 +290,7 @@ void update_mainmenu() {
     }
 
     int lastRadio = mVeh.RadioIndex;
-    if (menu.StringArray("Radio", RadioStationNames, mVeh.RadioIndex)) {
+    if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
         if (lastRadio == mVeh.RadioIndex) {
             AUDIO::SET_VEHICLE_RADIO_ENABLED(veh, true);
             AUDIO::SET_VEHICLE_RADIO_LOUD(veh, true);
@@ -256,18 +299,18 @@ void update_mainmenu() {
         }
     }
 
-    if (menu.BoolOption("Lights", areLowBeamsOn_)) {
+    if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
     if (areLowBeamsOn_) {
-        if (menu.BoolOption("High beams", areHighBeamsOn_)) {
+        if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
             VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
         }
     }
 
     int lastBlinker = mVeh.BlinkerIndex;
-    if (menu.StringArray("Indicators", BlinkerText, lastBlinker)) {
+    if (menu.StringArray(OptionBlinkers, BlinkerText, lastBlinker, OptionBlinkersDescription)) {
         if (lastBlinker == mVeh.BlinkerIndex) {
             switch ((Blinker)lastBlinker) {
             case Blinker::Left: {
@@ -295,7 +338,7 @@ void update_mainmenu() {
         mVeh.BlinkerIndex = lastBlinker % BlinkerText.size();
     }
 
-    if (menu.BoolOption("Alarm", isAlarm)) {
+    if (menu.BoolOption(OptionAlarm, isAlarm, OptionAlarmDescription)) {
         if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
             VEHICLE::SET_VEHICLE_ALARM(veh, false);
         }
@@ -306,7 +349,7 @@ void update_mainmenu() {
     }
 
     if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
-        if (menu.Option("Toggle roof")) {
+        if (menu.Option(OptionRoof, OptionRoofDescription)) {
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
                 VEHICLE::LOWER_CONVERTIBLE_ROOF(veh, false);
             }
@@ -317,7 +360,7 @@ void update_mainmenu() {
     }
     
     if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r")) {
-        if (menu.Option("Toggle bomb bays")) {
+        if (menu.Option(OptionBombbay, OptionBombbayDescription)) {
             mVeh.BombBayIndex++;
             mVeh.BombBayIndex %= 2; 
             if (mVeh.BombBayIndex == 0) {
@@ -332,7 +375,7 @@ void update_mainmenu() {
     if (HasDoors(veh)) {
         
         int bogus = 1;
-        if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
+        if (menu.StringArray(OptionLock, { "", LockStatusText[lockStatus] , "" }, bogus, OptionLockDescription)) {
             if (bogus != 1) {
                 lockStatusIndex++;
             }
@@ -341,7 +384,7 @@ void update_mainmenu() {
         }
 
         int lastDoorIndex = mVeh.DoorIndex;
-        if (menu.StringArray("Open/close doors", VehicleDoorText, mVeh.DoorIndex)) {
+        if (menu.StringArray(OptionDoors, VehicleDoorText, mVeh.DoorIndex, OptionDoorsDescription)) {
             if (lastDoorIndex == mVeh.DoorIndex) {
                 if (mVeh.DoorIndex >= NumDoors) {
                     bool isAnyDoorOpen = false;
