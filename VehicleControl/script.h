@@ -8,19 +8,18 @@ const char* const modDir  = "\\VehicleControl";
 void ScriptMain();
 void onMain();
 void onExit();
-void onRight();
-void onLeft();
 void update_menu();
 
 class ManagedVehicle {
 public:
     ManagedVehicle(Vehicle vehicle) : Vehicle(vehicle),
                                       DoorIndex(0),
-                                      HazardIndex(0) {}
+                                      BlinkerIndex(0) {}
     bool operator==(const ManagedVehicle& rhs) {
         return rhs.Vehicle == this->Vehicle;
     }
     Vehicle Vehicle;
     int DoorIndex;
-    int HazardIndex;
+    int BlinkerIndex;
+    int BombBayIndex;
 };

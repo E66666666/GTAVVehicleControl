@@ -53,7 +53,7 @@ enum class Door {
     Trunk = 5
 };
 
-vector<Door> Doors{
+vector<Door> Doors {
     Door::FrontLeftDoor,
     Door::FrontRightDoor,
     Door::BackLeftDoor,
@@ -72,9 +72,40 @@ vector<string> VehicleDoorText {
     "All Doors"
 };
 
-vector<string> GenericOnOff {
+enum class BombBayAction {
+    Open,
+    Close
+};
+
+vector<BombBayAction> BombBayStates{
+    BombBayAction::Open,
+    BombBayAction::Close
+};
+
+vector<string> BombBayText {
+    "Open",
+    "Close"
+};
+
+enum class Blinker {
+    Off,
+    Left,
+    Right,
+    Hazard
+};
+
+vector<Blinker> Blinkers {
+    Blinker::Off,
+    Blinker::Left,
+    Blinker::Right,
+    Blinker::Hazard
+};
+
+vector<string> BlinkerText {
     "Off",
-    "On"
+    "Left",
+    "Right",
+    "Hazard"
 };
 
 int currentVehicleIndex = 0;
@@ -87,14 +118,6 @@ void onMain() {
 }
 
 void onExit() {
-
-}
-
-void onRight() {
-
-}
-
-void onLeft() {
 
 }
 
@@ -119,6 +142,10 @@ pair<string, string> GetVehicleNames(Vehicle vehicle) {
     }
 
     return std::make_pair<string, string>(makeName, getGxtName(modelHash));
+}
+
+bool HasBone(Entity e, char* bone) {
+    return ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME(e, bone) != -1;
 }
 
 void update_mainmenu() {
@@ -180,26 +207,87 @@ void update_mainmenu() {
         }
     }
 
-    int bogus = 1;
-    if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
-        if (bogus == 0) {
-            lockStatusIndex--;
-        }
-        if (bogus == 2) {
-            lockStatusIndex++;
-        }
-        if (bogus != 1) {
-            lockStatusIndex %= 2;
-        }
-        VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
-    }
-
     if (menu.BoolOption("Low beams", areLowBeamsOn_)) {
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
     if (menu.BoolOption("High beams", areHighBeamsOn_)) {
         VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
+    }
+
+    int lastBlinker = mVeh.BlinkerIndex;
+    if (menu.StringArray("Indicators", BlinkerText, lastBlinker)) {
+        if (lastBlinker == mVeh.BlinkerIndex) {
+            switch ((Blinker)lastBlinker) {
+            case Blinker::Left: {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
+                break;
+            }
+            case Blinker::Right: {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
+                break;
+            }
+            case Blinker::Hazard: {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
+                break;
+            }
+            default: {
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
+                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
+                break;
+            }
+            }
+        }
+        mVeh.BlinkerIndex = lastBlinker % BlinkerText.size();
+    }
+
+    if (menu.BoolOption("Alarm", isAlarm)) {
+        if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
+            VEHICLE::SET_VEHICLE_ALARM(veh, false);
+        }
+        else {
+            VEHICLE::SET_VEHICLE_ALARM(veh, true);
+            VEHICLE::START_VEHICLE_ALARM(veh);
+        }
+    }
+
+    if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
+        if (menu.Option("Toggle roof")) {
+            if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
+                VEHICLE::LOWER_CONVERTIBLE_ROOF(veh, false);
+            }
+            if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 2) {
+                VEHICLE::RAISE_CONVERTIBLE_ROOF(veh, false);
+            }
+        }
+    }
+    
+    if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r")) {
+        //int oldIndex = mVeh.BombBayIndex;
+        if (menu.Option("Toggle bomb bays"/*, BombBayText, oldIndex*/)) {
+            //if (oldIndex != mVeh.BombBayIndex) {
+                mVeh.BombBayIndex++;
+            //}
+            mVeh.BombBayIndex %= 2;
+            if (mVeh.BombBayIndex == 0) {
+                VEHICLE::CLOSE_BOMB_BAY_DOORS(veh);
+            }
+            if (mVeh.BombBayIndex == 1) {
+                VEHICLE::OPEN_BOMB_BAY_DOORS(veh);
+            }
+        }
+    }
+
+    int bogus = 1;
+    if (menu.StringArray("Lock doors", { "", LockStatusText[lockStatus] , "" }, bogus)) {
+        if (bogus != 1) {
+            lockStatusIndex++;
+        }
+        lockStatusIndex = lockStatusIndex % 2;
+        VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
     }
 
     int lastDoorIndex = mVeh.DoorIndex;
@@ -233,31 +321,6 @@ void update_mainmenu() {
                 }
             }
         }
-    }
-
-    if (menu.BoolOption("Alarm", isAlarm)) {
-        if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
-            VEHICLE::SET_VEHICLE_ALARM(veh, false);
-        }
-        else {
-            VEHICLE::SET_VEHICLE_ALARM(veh, true);
-            VEHICLE::START_VEHICLE_ALARM(veh);
-        }
-    }
-
-    int lastHazard = mVeh.HazardIndex;
-    if (menu.StringArray("Hazards", GenericOnOff, lastHazard)) {
-        if (lastHazard == mVeh.HazardIndex) {
-            if (lastHazard) {
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
-            }
-            else {
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
-            }
-        }
-        mVeh.HazardIndex = lastHazard % 2;
     }
 }
 
