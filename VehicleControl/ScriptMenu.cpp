@@ -7,6 +7,7 @@
 using namespace std;
 
 const int NumDoors = 6;
+const int NumWindows = 4;
 
 extern NativeMenu::Menu menu;
 
@@ -96,6 +97,22 @@ vector<string> VehicleDoorBones{
     "vc_all"
 };
 
+vector<string> VehicleWindowText {
+    "Front Right",
+    "Front Left",
+    "Rear Right",
+    "Rear Left",
+    "All Windows"
+};
+
+vector<string> VehicleWindowBones {
+    "window_rf",
+    "window_lf",
+    "window_rr",
+    "window_lr",
+    "vc_all"
+};
+
 enum class BombBayAction {
     Open,
     Close
@@ -130,6 +147,51 @@ vector<string> BlinkerText {
     "Left",
     "Right",
     "Hazard"
+};
+
+vector<eVehicleNeonLight> Neons {
+    VehicleNeonLightLeft,
+    VehicleNeonLightRight,
+    VehicleNeonLightFront,
+    VehicleNeonLightBack,
+};
+
+vector<string> NeonText {
+    "Left",
+    "Right",
+    "Front",
+    "Back",
+    "All"
+};
+
+unordered_map<eVehicleNeonLight, string> NeonBonesMap {
+    { VehicleNeonLightLeft,  "neon_l" },
+    { VehicleNeonLightRight, "neon_r" },
+    { VehicleNeonLightFront, "neon_f" },
+    { VehicleNeonLightBack,  "neon_b" },
+};
+
+vector<string> SirenBones {
+    "siren1" ,
+    "siren2" ,
+    "siren3" ,
+    "siren4" ,
+    "siren5" ,
+    "siren6" ,
+    "siren7" ,
+    "siren8" ,
+    "siren9" ,
+    "siren10",
+    "siren11",
+    "siren12",
+    "siren13",
+    "siren14",
+    "siren15",
+    "siren16",
+    "siren17",
+    "siren18",
+    "siren19",
+    "siren20",
 };
 
 void onMain() {
@@ -250,6 +312,29 @@ void UpdateFob() {
     }
 }
 
+bool HasNeon(Vehicle veh, eVehicleNeonLight neon) {
+    return HasBone(veh, (char*)NeonBonesMap[neon].c_str());
+}
+
+bool HasNeon(Vehicle veh) {
+    bool hasNeon = false;
+    for (auto neon : NeonBonesMap) {
+        if (HasNeon(veh, neon.first)) {
+            hasNeon = true;
+            break;
+        }
+    }
+    return hasNeon;
+}
+
+bool HasSiren(Vehicle veh) {
+    for (auto siren : SirenBones) {
+        if (HasBone(veh, (char*)siren.c_str()))
+            return true;
+    }
+    return false;
+}
+
 string OptionNoVehicles = "No managed vehicles!";
 vector<string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
 
@@ -289,6 +374,15 @@ vector<string> OptionLockDescription = { "It would suck having your car stolen!"
 string OptionDoors = "Open/close doors";
 vector<string> OptionDoorsDescription = { "Steal the show at a car meet." };
 
+string OptionWindows = "Roll windows up/down";
+vector<string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
+
+string OptionNeon = "Neons";
+vector<string> OptionNeonDescription = { "<something snarky>" };
+
+string OptionSiren = "Sirens";
+vector<string> OptionSirenDescription = { "I AM THE LAW!" };
+
 void update_mainmenu() {
     menu.Title("Vehicle Control");
     menu.Subtitle(string("~b~") + DISPLAY_VERSION);
@@ -326,6 +420,7 @@ void update_mainmenu() {
     bool areHighBeamsOn_ = areHighBeamsOn == TRUE;
 
     bool isAlarm = VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh);
+    bool isSiren = VEHICLE::IS_VEHICLE_SIREN_ON(veh);
 
     vector<string> OptionVehicleDescription = { 
         OptionVehicleDescriptionPart, 
@@ -427,6 +522,35 @@ void update_mainmenu() {
         }
     }
 
+    if (HasSiren(veh)) {
+        if (menu.BoolOption(OptionSiren, isSiren, OptionSirenDescription)) {
+            bool isSirenOn = VEHICLE::IS_VEHICLE_SIREN_ON(veh);
+            VEHICLE::SET_VEHICLE_SIREN(veh, !isSirenOn);
+        }
+    }
+
+    if (HasNeon(veh)) {
+        int lastNeonIndex = mVeh.NeonIndex;
+        if (menu.StringArray(OptionNeon, NeonText, mVeh.NeonIndex, OptionNeonDescription)) {            
+            bool isAnyNeonOn = false;
+            for (int i = 0; i < 4; ++i) {
+                isAnyNeonOn |= VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, i) == TRUE;
+            }
+            if (lastNeonIndex == mVeh.NeonIndex) {
+                if (NeonText[lastNeonIndex] == "All") {
+                    PlayFobAnim(!isAnyNeonOn);
+                    for (int i = 0; i < 4; ++i) {
+                        VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED(veh, i, !isAnyNeonOn);
+                    }
+                }
+                else {
+                    PlayFobAnim(!VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex));
+                    VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex, !VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex));
+                }
+            }
+        }
+    }
+
     if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
         if (menu.Option(OptionRoof, OptionRoofDescription)) {
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
@@ -523,6 +647,21 @@ void update_mainmenu() {
                 }
             }
         }
+
+        //int lastWindowIndex = mVeh.WindowIndex;
+        //if (menu.StringArray(OptionWindows, VehicleWindowText, mVeh.WindowIndex, OptionWindowsDescription)) {
+        //    if (lastWindowIndex == mVeh.WindowIndex) {
+        //        if (mVeh.WindowIndex >= NumWindows) {
+        //            bool isAnyWindowDown = false;
+        //            for (int i = 0; i < NumWindows; ++i) {
+        //                VEHICLE::WINDOW
+        //            }
+        //        }
+        //        else {
+        //            
+        //        }
+        //    }
+        //}
     }
 }
 
