@@ -17,7 +17,7 @@ public:
                                       DoorIndex(0),
                                       BlinkerIndex(0),
                                       BombBayIndex(0),
-                                      RadioIndex(0) {}
+                                      RadioIndex(255) {}
 
     bool operator==(const ManagedVehicle& rhs) {
         return rhs.Vehicle == this->Vehicle;

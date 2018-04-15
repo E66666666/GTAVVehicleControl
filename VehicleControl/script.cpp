@@ -29,6 +29,7 @@ void update_game() {
 
     auto foundVehicle = std::find(managedVehicles.begin(), managedVehicles.end(), currentVehicle);
     if (foundVehicle == managedVehicles.end()) {
+        // TODO: Something to determine current vehicle radio station.
         managedVehicles.push_back(ManagedVehicle(currentVehicle));
     }
 }
