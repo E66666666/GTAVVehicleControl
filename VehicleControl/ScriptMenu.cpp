@@ -194,6 +194,7 @@ bool HasDoors(Entity e) {
 Object fob = 0;
 bool fobPlaying = false;
 bool fobBeepOn = false;
+bool fobBlop = false;
 
 void PlayFobAnim(bool beepOn) {
     if (PED::IS_PED_IN_ANY_VEHICLE(PLAYER::PLAYER_PED_ID(), false)) 
@@ -205,14 +206,11 @@ void PlayFobAnim(bool beepOn) {
     fob = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY("lr_prop_carkey_fob"), coords.x, coords.y, coords.z, true, false, false);
     ENTITY::ATTACH_ENTITY_TO_ENTITY(fob, PLAYER::PLAYER_PED_ID(), PED::GET_PED_BONE_INDEX(PLAYER::PLAYER_PED_ID(), 28422), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1, 0, 0, 0, 2, 1);
 
-    //fob = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY("lr_prop_carkey_fob"), 0.0f, 0.0f, 0.0f, 0, 0, 0);
-    //ENTITY::ATTACH_ENTITY_TO_ENTITY(fob, PLAYER::PLAYER_PED_ID(), PED::GET_PED_BONE_INDEX(PLAYER::PLAYER_PED_ID(), 57005), 0.00, 0.00, 0.00, 0.0, -90.0, -90.0, false, false, false, false, 2, true);
-
     STREAMING::REQUEST_ANIM_DICT("anim@mp_player_intmenu@key_fob@");
     while (!STREAMING::HAS_ANIM_DICT_LOADED("anim@mp_player_intmenu@key_fob@")) {
         WAIT(0);
     }
-
+    WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
     AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
 
@@ -221,8 +219,7 @@ void UpdateFob() {
         fobPlaying = true;
     }
 
-    if (fobPlaying) {
-        showText(0.1, 0.5, 1.0, "BeepBoop");
+    if (fobPlaying && !fobBlop) {
         if (ENTITY::GET_ENTITY_ANIM_CURRENT_TIME(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click") >= 0.226) {
             AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Fob", PLAYER::PLAYER_PED_ID(), "PI_Menu_Sounds", 1, 0);
             if (fobBeepOn) {
@@ -231,6 +228,7 @@ void UpdateFob() {
             else {
                 AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Close", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
             }
+            fobBlop = true;
         }
     }
 
@@ -241,6 +239,7 @@ void UpdateFob() {
         OBJECT::DELETE_OBJECT(&fob);
         fob = 0;
         fobPlaying = false;
+        fobBlop = false;
     }
 }
 
@@ -365,13 +364,13 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
-        PlayFobAnim(!areLowBeamsOn_);
+        PlayFobAnim(areLowBeamsOn_);
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
     if (areLowBeamsOn_) {
         if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
-            PlayFobAnim(!areHighBeamsOn_);
+            PlayFobAnim(areHighBeamsOn_);
             VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
         }
     }
