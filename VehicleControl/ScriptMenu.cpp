@@ -3,9 +3,10 @@
 #include <menu.h>
 #include "Util/StringFormat.h"
 #include "Util/UIUtils.h"
-#include "Util/Logger.hpp"
 
 using namespace std;
+
+const int NumDoors = 6;
 
 extern NativeMenu::Menu menu;
 
@@ -15,8 +16,20 @@ extern Vehicle currentVehicle;
 extern Vehicle lastVehicle;
 
 extern vector<ManagedVehicle> managedVehicles;
+extern int OffStationIndex;
 
-const int NumDoors = 6;
+int currentVehicleIndex = 0;
+bool pendingExtern = false;
+vector<function<void(void)>> pendingTaskSequence;
+
+Object fob = 0;
+bool fobPlaying = false;
+bool fobBeepOn = false;
+bool fobBlop = false;
+
+// GXT name, station number, internal name
+unordered_map<string, pair<int, string>> RadioStations;
+vector<string> RadioStationNames; // GXT names
 
 enum class LockStatus : int {
     None,
@@ -119,16 +132,6 @@ vector<string> BlinkerText {
     "Hazard"
 };
 
-// Nice name, station number, internal name
-unordered_map<string, pair<int, string>> RadioStations;
-// Nice names!
-vector<string> RadioStationNames;
-extern int OffStationIndex;
-int currentVehicleIndex = 0;
-
-//int currentDoorIndex = 0;
-//int currentHazard = 0;
-
 void onMain() {
     menu.ReadSettings();
 }
@@ -188,14 +191,6 @@ bool HasDoors(Entity e) {
     return false;
 }
 
-Object fob = 0;
-bool fobPlaying = false;
-bool fobBeepOn = false;
-bool fobBlop = false;
-
-bool pendingExtern = false;
-vector<function<void(void)>> pendingTaskSequence;
-
 void executePendingSequence() {
     for (auto task : pendingTaskSequence) {
         task();
@@ -223,8 +218,6 @@ void PlayFobAnim(bool beepOn) {
     WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
     AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
-
-
 
 void UpdateFob() {
     if (ENTITY::IS_ENTITY_PLAYING_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 3)) {
