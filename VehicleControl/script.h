@@ -11,11 +11,9 @@ void onExit();
 void update_menu();
 void initRadioStations();
 
-struct Neon {
-    bool Left;
-    bool Right;
-    bool Front;
-    bool Rear;
+enum class WindowState {
+    Up,
+    Down,
 };
 
 class ManagedVehicle {
@@ -27,7 +25,12 @@ public:
           BombBayIndex(0),
           RadioIndex(radioIdx),
           WindowIndex(0),
-          NeonIndex(0) { }
+          NeonIndex(0) {
+        WindowState[0] = WindowState::Up;
+        WindowState[1] = WindowState::Up;
+        WindowState[2] = WindowState::Up;
+        WindowState[3] = WindowState::Up;
+    }
 
     bool operator==(const ManagedVehicle& rhs) {
         return rhs.Vehicle == this->Vehicle;
@@ -40,4 +43,5 @@ public:
     int RadioIndex;
     int WindowIndex;
     int NeonIndex;
+    WindowState WindowState[4];
 };

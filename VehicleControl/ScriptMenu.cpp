@@ -26,6 +26,7 @@ vector<function<void(void)>> pendingTaskSequence;
 Object fob = 0;
 bool fobPlaying = false;
 bool fobBeepOn = false;
+bool fobBeepMute = false;
 bool fobBlop = false;
 
 // GXT name, station number, internal name
@@ -98,18 +99,19 @@ vector<string> VehicleDoorBones{
 };
 
 vector<string> VehicleWindowText {
-    "Front Right",
     "Front Left",
-    "Rear Right",
+    "Front Right",
     "Rear Left",
+    "Rear Right",
     "All Windows"
 };
 
+// Needs to be LEQ than/to door bones!
 vector<string> VehicleWindowBones {
-    "window_rf",
     "window_lf",
-    "window_rr",
+    "window_rf",
     "window_lr",
+    "window_rr",
     "vc_all"
 };
 
@@ -246,9 +248,17 @@ bool HasBone(Entity e, char* bone) {
 bool HasDoors(Entity e) {
     for (auto b: VehicleDoorBones) {
         if (b == "vc_all") continue;
-        if (HasBone(e, (char*)b.c_str())) {
+        if (HasBone(e, (char*)b.c_str())) 
             return true;
-        }
+    }
+    return false;
+}
+
+bool HasWindows(Entity e) {
+    for (auto w: VehicleWindowBones) {
+        if (w == "vc_all") continue;
+        if (HasBone(e, (char*)w.c_str())) 
+            return true;
     }
     return false;
 }
@@ -260,7 +270,7 @@ void executePendingSequence() {
     pendingTaskSequence.clear();
 }
 
-void PlayFobAnim(bool beepOn) {
+void PlayFobAnim(bool beepOn, bool mute = false) {
     if (PED::IS_PED_IN_ANY_VEHICLE(PLAYER::PLAYER_PED_ID(), false)) {
         executePendingSequence();
         pendingExtern = false;
@@ -268,6 +278,7 @@ void PlayFobAnim(bool beepOn) {
     }
     pendingExtern = true;
     fobBeepOn = beepOn;
+    fobBeepMute = mute;
 
     auto coords =  ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), 0);
     fob = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY("lr_prop_carkey_fob"), coords.x, coords.y, coords.z, true, false, false);
@@ -289,11 +300,13 @@ void UpdateFob() {
     if (fobPlaying && !fobBlop) {
         if (ENTITY::GET_ENTITY_ANIM_CURRENT_TIME(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click") >= 0.226) {
             AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Fob", PLAYER::PLAYER_PED_ID(), "PI_Menu_Sounds", 1, 0);
-            if (fobBeepOn) {
-                AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Open", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
-            }
-            else {
-                AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Close", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
+            if (!fobBeepMute) {
+                if (fobBeepOn) {
+                    AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Open", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
+                }
+                else {
+                    AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Close", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
+                }
             }
             fobBlop = true;
             pendingExtern = false;
@@ -378,7 +391,7 @@ string OptionWindows = "Roll windows up/down";
 vector<string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
 
 string OptionNeon = "Neons";
-vector<string> OptionNeonDescription = { "<something snarky>" };
+vector<string> OptionNeonDescription = { "Want a side of rice with that?" };
 
 string OptionSiren = "Sirens";
 vector<string> OptionSirenDescription = { "I AM THE LAW!" };
@@ -452,12 +465,7 @@ void update_mainmenu() {
     int lastRadio = mVeh.RadioIndex;
     if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
         if (lastRadio == mVeh.RadioIndex) {
-            if (RadioStationNames[mVeh.RadioIndex] == "Radio off") {
-                PlayFobAnim(false);
-            }
-            else {
-                PlayFobAnim(true);
-            }
+            PlayFobAnim(false, true);
             pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_ENABLED, veh, true));
             pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_LOUD,veh, true));
             pendingTaskSequence.push_back(bind(&AUDIO::_0xC1805D05E6D4FE10,veh));
@@ -466,13 +474,13 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
-        PlayFobAnim(areLowBeamsOn_);
+        PlayFobAnim(false, true);
         pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_LIGHTS, veh, areLowBeamsOn_ ? 3 : 4));
     }
 
-    if (areLowBeamsOn_) {
+    if (areLowBeamsOn) {
         if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
-            PlayFobAnim(areHighBeamsOn_);
+            PlayFobAnim(false, true);
             pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_FULLBEAM, veh, areHighBeamsOn_));
         }
     }
@@ -480,27 +488,24 @@ void update_mainmenu() {
     int lastBlinker = mVeh.BlinkerIndex;
     if (menu.StringArray(OptionBlinkers, BlinkerText, lastBlinker, OptionBlinkersDescription)) {
         if (lastBlinker == mVeh.BlinkerIndex) {
+            PlayFobAnim(false, true);
             switch ((Blinker)lastBlinker) {
             case Blinker::Left: {
-                PlayFobAnim(true);
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
                 break;                                                                  
             }                                                                           
             case Blinker::Right: {                                                      
-                PlayFobAnim(true);                                                      
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
                 break;                                                                   
             }                                                                            
             case Blinker::Hazard: {                                                      
-                PlayFobAnim(true);                                                       
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
                 break;                                                                  
             }                                                                           
             default: {                                                                  
-                PlayFobAnim(false);                                                     
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
                 pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
                 break;
@@ -524,8 +529,9 @@ void update_mainmenu() {
 
     if (HasSiren(veh)) {
         if (menu.BoolOption(OptionSiren, isSiren, OptionSirenDescription)) {
+            PlayFobAnim(false, true);
             bool isSirenOn = VEHICLE::IS_VEHICLE_SIREN_ON(veh);
-            VEHICLE::SET_VEHICLE_SIREN(veh, !isSirenOn);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_SIREN, veh, !isSirenOn));
         }
     }
 
@@ -537,15 +543,14 @@ void update_mainmenu() {
                 isAnyNeonOn |= VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, i) == TRUE;
             }
             if (lastNeonIndex == mVeh.NeonIndex) {
+                PlayFobAnim(false, true);
                 if (NeonText[lastNeonIndex] == "All") {
-                    PlayFobAnim(!isAnyNeonOn);
                     for (int i = 0; i < 4; ++i) {
-                        VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED(veh, i, !isAnyNeonOn);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED,veh, i, !isAnyNeonOn));
                     }
                 }
                 else {
-                    PlayFobAnim(!VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex));
-                    VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex, !VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex));
+                    pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED,veh, lastNeonIndex, !VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex)));
                 }
             }
         }
@@ -583,11 +588,17 @@ void update_mainmenu() {
         
         int bogus = 1;
         if (menu.StringArray(OptionLock, { "", LockStatusText[lockStatus] , "" }, bogus, OptionLockDescription)) {
-            PlayFobAnim(true);
             if (bogus != 1) {
                 lockStatusIndex++;
             }
             lockStatusIndex = lockStatusIndex % 2;
+            if (LockStatuses[lockStatusIndex] == LockStatus::Locked) {
+                PlayFobAnim(true);
+            }
+            else {
+                PlayFobAnim(false);
+            }
+
             pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOORS_LOCKED, veh, static_cast<int>(LockStatuses[lockStatusIndex])));
         }
 
@@ -647,21 +658,66 @@ void update_mainmenu() {
                 }
             }
         }
+    }
 
-        //int lastWindowIndex = mVeh.WindowIndex;
-        //if (menu.StringArray(OptionWindows, VehicleWindowText, mVeh.WindowIndex, OptionWindowsDescription)) {
-        //    if (lastWindowIndex == mVeh.WindowIndex) {
-        //        if (mVeh.WindowIndex >= NumWindows) {
-        //            bool isAnyWindowDown = false;
-        //            for (int i = 0; i < NumWindows; ++i) {
-        //                VEHICLE::WINDOW
-        //            }
-        //        }
-        //        else {
-        //            
-        //        }
-        //    }
-        //}
+    if (HasDoors(veh) && HasWindows(veh)) {
+        int lastWindowIndex = mVeh.WindowIndex;
+        if (menu.StringArray(OptionWindows, VehicleWindowText, mVeh.WindowIndex, OptionWindowsDescription)) {
+            if (lastWindowIndex == mVeh.WindowIndex) {
+                if (VehicleWindowText[mVeh.WindowIndex] == "All Windows") {
+                    bool isAnyWindowDown = false;
+                    for (int i = 0; i < NumWindows; ++i) {
+                        isAnyWindowDown |= (mVeh.WindowState[i]) == WindowState::Down;
+                    }
+                    if (isAnyWindowDown) {
+                        PlayFobAnim(false);
+                        for (int i = 0; i < NumWindows; ++i) {
+                            pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_UP_WINDOW, veh, i));
+                            mVeh.WindowState[i] = WindowState::Up;
+                        }
+                    }
+                    else {
+                        PlayFobAnim(true);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_DOWN_WINDOWS,veh));
+                        for (int i = 0; i < NumWindows; ++i) {
+                            mVeh.WindowState[i] = WindowState::Down;
+                        }
+                    }
+                }
+                else {
+                    if (mVeh.WindowState[mVeh.WindowIndex] == WindowState::Down) {
+                        PlayFobAnim(false);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_UP_WINDOW,veh, mVeh.WindowIndex));
+                        mVeh.WindowState[mVeh.WindowIndex] = WindowState::Up;
+                    }
+                    else {
+                        PlayFobAnim(true);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_DOWN_WINDOW,veh, mVeh.WindowIndex));
+                        mVeh.WindowState[mVeh.WindowIndex] = WindowState::Down;
+                    }
+                }
+            }
+            else {
+                if (mVeh.WindowIndex < VehicleDoorBones.size()) {
+                    if (mVeh.WindowIndex > lastWindowIndex) {
+                        while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.WindowIndex].c_str())) {
+                            mVeh.WindowIndex++;
+                            if (mVeh.WindowIndex >= VehicleWindowBones.size()) {
+                                mVeh.WindowIndex = 0;
+                            }
+                        }
+                    }
+                    else if (mVeh.WindowIndex < lastWindowIndex) {
+                        while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.WindowIndex].c_str())) {
+                            mVeh.WindowIndex--;
+                            if (mVeh.WindowIndex < 0) {
+                                mVeh.WindowIndex = VehicleWindowBones.size() - 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
