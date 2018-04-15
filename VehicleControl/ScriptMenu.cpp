@@ -191,6 +191,20 @@ bool HasDoors(Entity e) {
     return false;
 }
 
+void PlayFobAnim() {
+    if (PED::IS_PED_IN_ANY_VEHICLE(PLAYER::PLAYER_PED_ID(), false)) 
+        return;
+
+    
+
+    STREAMING::REQUEST_ANIM_DICT("anim@mp_player_intmenu@key_fob@");
+    while (!STREAMING::HAS_ANIM_DICT_LOADED("anim@mp_player_intmenu@key_fob@")) {
+        WAIT(0);
+    }
+
+    AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
+}
+
 string OptionNoVehicles = "No managed vehicles!";
 vector<string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
 
@@ -285,6 +299,7 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionEngineOn, isEngineOn, OptionEngineOnDescription)) {
+        PlayFobAnim();
         if (VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh)) {
             VEHICLE::SET_VEHICLE_ENGINE_ON(veh, false, true, true);
         }
@@ -296,6 +311,7 @@ void update_mainmenu() {
     int lastRadio = mVeh.RadioIndex;
     if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
         if (lastRadio == mVeh.RadioIndex) {
+            PlayFobAnim();
             AUDIO::SET_VEHICLE_RADIO_ENABLED(veh, true);
             AUDIO::SET_VEHICLE_RADIO_LOUD(veh, true);
             AUDIO::_0xC1805D05E6D4FE10(veh);
@@ -304,11 +320,13 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
+        PlayFobAnim();
         VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
     }
 
     if (areLowBeamsOn_) {
         if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
+            PlayFobAnim();
             VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
         }
     }
@@ -316,6 +334,7 @@ void update_mainmenu() {
     int lastBlinker = mVeh.BlinkerIndex;
     if (menu.StringArray(OptionBlinkers, BlinkerText, lastBlinker, OptionBlinkersDescription)) {
         if (lastBlinker == mVeh.BlinkerIndex) {
+            PlayFobAnim();
             switch ((Blinker)lastBlinker) {
             case Blinker::Left: {
                 VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
@@ -343,6 +362,7 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionAlarm, isAlarm, OptionAlarmDescription)) {
+        PlayFobAnim();
         if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
             VEHICLE::SET_VEHICLE_ALARM(veh, false);
         }
@@ -354,6 +374,7 @@ void update_mainmenu() {
 
     if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
         if (menu.Option(OptionRoof, OptionRoofDescription)) {
+            PlayFobAnim();
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
                 VEHICLE::LOWER_CONVERTIBLE_ROOF(veh, false);
             }
@@ -365,6 +386,7 @@ void update_mainmenu() {
     
     if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r")) {
         if (menu.Option(OptionBombbay, OptionBombbayDescription)) {
+            PlayFobAnim();
             mVeh.BombBayIndex++;
             mVeh.BombBayIndex %= 2; 
             if (mVeh.BombBayIndex == 0) {
@@ -380,6 +402,7 @@ void update_mainmenu() {
         
         int bogus = 1;
         if (menu.StringArray(OptionLock, { "", LockStatusText[lockStatus] , "" }, bogus, OptionLockDescription)) {
+            PlayFobAnim();
             if (bogus != 1) {
                 lockStatusIndex++;
             }
@@ -390,6 +413,7 @@ void update_mainmenu() {
         int lastDoorIndex = mVeh.DoorIndex;
         if (menu.StringArray(OptionDoors, VehicleDoorText, mVeh.DoorIndex, OptionDoorsDescription)) {
             if (lastDoorIndex == mVeh.DoorIndex) {
+                PlayFobAnim();
                 if (mVeh.DoorIndex >= NumDoors) {
                     bool isAnyDoorOpen = false;
                     for (int i = 0; i < NumDoors; ++i) {
@@ -419,9 +443,6 @@ void update_mainmenu() {
                 }
             }
             else {
-                // lastDoorId = 4
-                // doorIndex == 5 for "Just changed to Trunk)
-
                 if (mVeh.DoorIndex < VehicleDoorBones.size()) {
                     if (mVeh.DoorIndex > lastDoorIndex) {
                         while (!HasBone(veh, (char*)VehicleDoorBones[mVeh.DoorIndex].c_str())) {
