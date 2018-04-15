@@ -13,15 +13,16 @@ void initRadioStations();
 
 class ManagedVehicle {
 public:
-    ManagedVehicle(Vehicle vehicle) : Vehicle(vehicle),
+    ManagedVehicle(Vehicle vehicle, int radioIdx) : Vehicle(vehicle),
                                       DoorIndex(0),
                                       BlinkerIndex(0),
                                       BombBayIndex(0),
-                                      RadioIndex(255) {}
+                                      RadioIndex(radioIdx) {}
 
     bool operator==(const ManagedVehicle& rhs) {
         return rhs.Vehicle == this->Vehicle;
     }
+
     Vehicle Vehicle;
     int DoorIndex;
     int BlinkerIndex;

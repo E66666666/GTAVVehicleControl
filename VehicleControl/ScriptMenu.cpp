@@ -123,7 +123,7 @@ vector<string> BlinkerText {
 unordered_map<string, pair<int, string>> RadioStations;
 // Nice names!
 vector<string> RadioStationNames;
-
+extern int OffStationIndex;
 int currentVehicleIndex = 0;
 
 //int currentDoorIndex = 0;
@@ -146,10 +146,7 @@ void initRadioStations() {
     }
     RadioStations.try_emplace("Radio Off", make_pair( 255, "OFF" ));
     RadioStationNames.push_back("Radio Off");
-
-    for (auto it = RadioStations.begin(); it != RadioStations.end(); ++it) {
-        logger.Write(INFO, "%d\t%s %s", it->second.first, it->second.second.c_str(), it->first.c_str());
-    }
+    OffStationIndex = RadioStationNames.size() - 1;
 }
 
 string getGxtName(Hash hash) {

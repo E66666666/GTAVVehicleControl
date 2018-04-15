@@ -19,6 +19,10 @@ Vehicle lastVehicle = 0;
 
 std::vector<ManagedVehicle> managedVehicles;
 
+// Externally set when init radio stations is done
+// Inits to "OFF" index in the script radio list
+int OffStationIndex = 0;
+
 void update_game() {
     player = PLAYER::PLAYER_ID();
     playerPed = PLAYER::PLAYER_PED_ID();
@@ -27,10 +31,11 @@ void update_game() {
     if (!ENTITY::DOES_ENTITY_EXIST(currentVehicle))
         return;
 
-    auto foundVehicle = std::find(managedVehicles.begin(), managedVehicles.end(), currentVehicle);
+    auto foundVehicle = std::find_if(managedVehicles.begin(), managedVehicles.end(), 
+        [](ManagedVehicle const& v) { return v.Vehicle == currentVehicle; });
     if (foundVehicle == managedVehicles.end()) {
         // TODO: Something to determine current vehicle radio station.
-        managedVehicles.push_back(ManagedVehicle(currentVehicle));
+        managedVehicles.push_back(ManagedVehicle(currentVehicle, OffStationIndex));
     }
 }
 
