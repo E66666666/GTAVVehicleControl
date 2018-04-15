@@ -196,10 +196,23 @@ bool fobPlaying = false;
 bool fobBeepOn = false;
 bool fobBlop = false;
 
-void PlayFobAnim(bool beepOn) {
-    if (PED::IS_PED_IN_ANY_VEHICLE(PLAYER::PLAYER_PED_ID(), false)) 
-        return;
+bool pendingExtern = false;
+vector<function<void(void)>> pendingTaskSequence;
 
+void executePendingSequence() {
+    for (auto task : pendingTaskSequence) {
+        task();
+    }
+    pendingTaskSequence.clear();
+}
+
+void PlayFobAnim(bool beepOn) {
+    if (PED::IS_PED_IN_ANY_VEHICLE(PLAYER::PLAYER_PED_ID(), false)) {
+        executePendingSequence();
+        pendingExtern = false;
+        return;
+    }
+    pendingExtern = true;
     fobBeepOn = beepOn;
 
     auto coords =  ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), 0);
@@ -213,6 +226,8 @@ void PlayFobAnim(bool beepOn) {
     WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
     AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
+
+
 
 void UpdateFob() {
     if (ENTITY::IS_ENTITY_PLAYING_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 3)) {
@@ -229,6 +244,8 @@ void UpdateFob() {
                 AUDIO::PLAY_SOUND_FROM_ENTITY(-1, "Remote_Control_Close", managedVehicles[currentVehicleIndex].Vehicle, "PI_Menu_Sounds", 1, 0);
             }
             fobBlop = true;
+            pendingExtern = false;
+            executePendingSequence();
         }
     }
 
@@ -339,39 +356,39 @@ void update_mainmenu() {
     if (menu.BoolOption(OptionEngineOn, isEngineOn, OptionEngineOnDescription)) {
         if (VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh)) {
             PlayFobAnim(false);
-            VEHICLE::SET_VEHICLE_ENGINE_ON(veh, false, true, true);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, false, true, true));
         }
         else {
             PlayFobAnim(true);
-            VEHICLE::SET_VEHICLE_ENGINE_ON(veh, true, true, true);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, true, true, true));
         }
     }
 
     int lastRadio = mVeh.RadioIndex;
     if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
         if (lastRadio == mVeh.RadioIndex) {
-            if (lastRadio == 255) {
+            if (RadioStationNames[mVeh.RadioIndex] == "Radio off") {
                 PlayFobAnim(false);
             }
             else {
                 PlayFobAnim(true);
             }
-            AUDIO::SET_VEHICLE_RADIO_ENABLED(veh, true);
-            AUDIO::SET_VEHICLE_RADIO_LOUD(veh, true);
-            AUDIO::_0xC1805D05E6D4FE10(veh);
-            AUDIO::SET_VEH_RADIO_STATION(veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
+            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_ENABLED, veh, true));
+            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_LOUD,veh, true));
+            pendingTaskSequence.push_back(bind(&AUDIO::_0xC1805D05E6D4FE10,veh));
+            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEH_RADIO_STATION,veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str()));
         }
     }
 
     if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
         PlayFobAnim(areLowBeamsOn_);
-        VEHICLE::SET_VEHICLE_LIGHTS(veh, areLowBeamsOn_ ? 3 : 4);
+        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_LIGHTS, veh, areLowBeamsOn_ ? 3 : 4));
     }
 
     if (areLowBeamsOn_) {
         if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
             PlayFobAnim(areHighBeamsOn_);
-            VEHICLE::SET_VEHICLE_FULLBEAM(veh, areHighBeamsOn_);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_FULLBEAM, veh, areHighBeamsOn_));
         }
     }
 
@@ -381,26 +398,26 @@ void update_mainmenu() {
             switch ((Blinker)lastBlinker) {
             case Blinker::Left: {
                 PlayFobAnim(true);
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
-                break;
-            }
-            case Blinker::Right: {
-                PlayFobAnim(true);
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
-                break;
-            }
-            case Blinker::Hazard: {
-                PlayFobAnim(true);
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, true); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, true); // R
-                break;
-            }
-            default: {
-                PlayFobAnim(false);
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 0, false); // L
-                VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS(veh, 1, false); // R
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
+                break;                                                                  
+            }                                                                           
+            case Blinker::Right: {                                                      
+                PlayFobAnim(true);                                                      
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
+                break;                                                                   
+            }                                                                            
+            case Blinker::Hazard: {                                                      
+                PlayFobAnim(true);                                                       
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
+                break;                                                                  
+            }                                                                           
+            default: {                                                                  
+                PlayFobAnim(false);                                                     
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
+                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
                 break;
             }
             }
@@ -411,37 +428,39 @@ void update_mainmenu() {
     if (menu.BoolOption(OptionAlarm, isAlarm, OptionAlarmDescription)) {
         if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
             PlayFobAnim(false);
-            VEHICLE::SET_VEHICLE_ALARM(veh, false);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ALARM, veh, false));
         }
         else {
             PlayFobAnim(true);
-            VEHICLE::SET_VEHICLE_ALARM(veh, true);
-            VEHICLE::START_VEHICLE_ALARM(veh);
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ALARM, veh, true));
+            pendingTaskSequence.push_back(bind(&VEHICLE::START_VEHICLE_ALARM, veh));
         }
     }
 
     if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
         if (menu.Option(OptionRoof, OptionRoofDescription)) {
-            PlayFobAnim(true);
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
-                VEHICLE::LOWER_CONVERTIBLE_ROOF(veh, false);
+                PlayFobAnim(true);
+                pendingTaskSequence.push_back(bind(&VEHICLE::LOWER_CONVERTIBLE_ROOF, veh, false));
             }
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 2) {
-                VEHICLE::RAISE_CONVERTIBLE_ROOF(veh, false);
+                PlayFobAnim(false);
+                pendingTaskSequence.push_back(bind(&VEHICLE::RAISE_CONVERTIBLE_ROOF, veh, false));
             }
         }
     }
     
     if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r")) {
         if (menu.Option(OptionBombbay, OptionBombbayDescription)) {
-            PlayFobAnim(true);
             mVeh.BombBayIndex++;
             mVeh.BombBayIndex %= 2; 
             if (mVeh.BombBayIndex == 0) {
-                VEHICLE::CLOSE_BOMB_BAY_DOORS(veh);
+                PlayFobAnim(false);
+                pendingTaskSequence.push_back(bind(&VEHICLE::CLOSE_BOMB_BAY_DOORS, veh));
             }
             if (mVeh.BombBayIndex == 1) {
-                VEHICLE::OPEN_BOMB_BAY_DOORS(veh);
+                PlayFobAnim(true);
+                pendingTaskSequence.push_back(bind(&VEHICLE::OPEN_BOMB_BAY_DOORS, veh));
             }
         }
     }
@@ -455,13 +474,12 @@ void update_mainmenu() {
                 lockStatusIndex++;
             }
             lockStatusIndex = lockStatusIndex % 2;
-            VEHICLE::SET_VEHICLE_DOORS_LOCKED(veh, static_cast<int>(LockStatuses[lockStatusIndex]));
+            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOORS_LOCKED, veh, static_cast<int>(LockStatuses[lockStatusIndex])));
         }
 
         int lastDoorIndex = mVeh.DoorIndex;
         if (menu.StringArray(OptionDoors, VehicleDoorText, mVeh.DoorIndex, OptionDoorsDescription)) {
             if (lastDoorIndex == mVeh.DoorIndex) {
-                PlayFobAnim(true);
                 if (mVeh.DoorIndex >= NumDoors) {
                     bool isAnyDoorOpen = false;
                     for (int i = 0; i < NumDoors; ++i) {
@@ -472,21 +490,25 @@ void update_mainmenu() {
                     }
                     if (isAnyDoorOpen) {
                         for (int i = 0; i < NumDoors; ++i) {
-                            VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, i, false);
+                            PlayFobAnim(false);
+                            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, i, false));
                         }
                     }
                     else {
                         for (int i = 0; i < NumDoors; ++i) {
-                            VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, i, false, false);
+                            PlayFobAnim(true);
+                            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, i, false, false));
                         }
                     }
                 }
                 else {
                     if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, mVeh.DoorIndex) > 0.0f) {
-                        VEHICLE::SET_VEHICLE_DOOR_SHUT(veh, mVeh.DoorIndex, false);
+                        PlayFobAnim(false);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, mVeh.DoorIndex, false));
                     }
                     else {
-                        VEHICLE::SET_VEHICLE_DOOR_OPEN(veh, mVeh.DoorIndex, false, false);
+                        PlayFobAnim(true);
+                        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, mVeh.DoorIndex, false, false));
                     }
                 }
             }
