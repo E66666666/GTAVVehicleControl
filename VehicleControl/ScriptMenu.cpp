@@ -454,14 +454,13 @@ void update_mainmenu() {
     }
 
     if (menu.BoolOption(OptionEngineOn, isEngineOn, OptionEngineOnDescription)) {
-        if (VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh)) {
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, false, true, true));
-            PlayFobAnim(false);
+        Hash model = ENTITY::GET_ENTITY_MODEL(mVeh.Vehicle);
+        bool lIsEngineRunning = VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh);
+        if (VEHICLE::IS_THIS_MODEL_A_PLANE(model)) {
+            pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_JET_ENGINE_ON, veh, true));
         }
-        else {
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, true, true, true));
-            PlayFobAnim(true);
-        }
+        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, !lIsEngineRunning, true, true));
+        PlayFobAnim(!lIsEngineRunning);
     }
 
     int lastRadio = mVeh.RadioIndex;
