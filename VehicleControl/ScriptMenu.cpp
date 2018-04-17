@@ -4,8 +4,6 @@
 #include "Util/StringFormat.h"
 #include "Util/UIUtils.h"
 
-using namespace std;
-
 const int NumDoors = 6;
 const int NumWindows = 4;
 
@@ -16,13 +14,13 @@ extern Ped playerPed;
 extern Vehicle currentVehicle;
 extern Vehicle lastVehicle;
 
-extern vector<ManagedVehicle> managedVehicles;
+extern std::vector<ManagedVehicle> managedVehicles;
 extern int OffStationIndex;
 extern bool CanUseNeonNative;
 
 int currentVehicleIndex = 0;
 bool pendingExtern = false;
-vector<function<void(void)>> pendingTaskSequence;
+std::vector<std::function<void(void)>> pendingTaskSequence;
 
 Object fob = 0;
 bool fobPlaying = false;
@@ -31,8 +29,8 @@ bool fobBeepMute = false;
 bool fobBlop = false;
 
 // GXT name, station number, internal name
-unordered_map<string, pair<int, string>> RadioStations;
-vector<string> RadioStationNames; // GXT names
+std::unordered_map<std::string, std::pair<int, std::string>> RadioStations;
+std::vector<std::string> RadioStationNames; // GXT names
 
 static void _SET_VEHICLE_NEON_ON(Vehicle vehicle, BOOL value) { invoke<Void>(0x83F813570FF519DE, vehicle, value); }
 
@@ -47,12 +45,12 @@ enum class LockStatus : int {
     CannotBeTriedToEnter = 10
 };
 
-vector<LockStatus> LockStatuses {
+std::vector<LockStatus> LockStatuses {
     LockStatus::Unlocked,
     LockStatus::Locked,
 };
 
-unordered_map<LockStatus, string> LockStatusText {
+std::unordered_map<LockStatus, std::string> LockStatusText {
     { LockStatus::None,                     "None" },
     { LockStatus::Unlocked,                 "Unlocked" },
     { LockStatus::Locked,                   "Locked" },
@@ -72,7 +70,7 @@ enum class Door {
     Trunk = 5
 };
 
-vector<Door> Doors {
+std::vector<Door> Doors {
     Door::FrontLeftDoor,
     Door::FrontRightDoor,
     Door::BackLeftDoor,
@@ -81,7 +79,7 @@ vector<Door> Doors {
     Door::Trunk,
 };
 
-vector<string> VehicleDoorText {
+std::vector<std::string> VehicleDoorText {
     "Front Left",
     "Front Right",
     "Back Left",
@@ -91,7 +89,7 @@ vector<string> VehicleDoorText {
     "All Doors"
 };
 
-vector<string> VehicleDoorBones{
+std::vector<std::string> VehicleDoorBones {
     "door_dside_f",
     "door_pside_f",
     "door_dside_r",
@@ -101,7 +99,7 @@ vector<string> VehicleDoorBones{
     "vc_all"
 };
 
-vector<string> VehicleWindowText {
+std::vector<std::string> VehicleWindowText {
     "Front Left",
     "Front Right",
     "Rear Left",
@@ -110,7 +108,7 @@ vector<string> VehicleWindowText {
 };
 
 // Needs to be LEQ than/to door bones!
-vector<string> VehicleWindowBones {
+std::vector<std::string> VehicleWindowBones {
     "window_lf",
     "window_rf",
     "window_lr",
@@ -123,12 +121,12 @@ enum class BombBayAction {
     Close
 };
 
-vector<BombBayAction> BombBayStates{
+std::vector<BombBayAction> BombBayStates {
     BombBayAction::Open,
     BombBayAction::Close
 };
 
-vector<string> BombBayText {
+std::vector<std::string> BombBayText {
     "Open",
     "Close"
 };
@@ -140,28 +138,28 @@ enum class Blinker {
     Hazard
 };
 
-vector<Blinker> Blinkers {
+std::vector<Blinker> Blinkers {
     Blinker::Off,
     Blinker::Left,
     Blinker::Right,
     Blinker::Hazard
 };
 
-vector<string> BlinkerText {
+std::vector<std::string> BlinkerText {
     "Off",
     "Left",
     "Right",
     "Hazard"
 };
 
-vector<eVehicleNeonLight> Neons {
+std::vector<eVehicleNeonLight> Neons {
     VehicleNeonLightLeft,
     VehicleNeonLightRight,
     VehicleNeonLightFront,
     VehicleNeonLightBack,
 };
 
-vector<string> NeonText {
+std::vector<std::string> NeonText {
     "Left",
     "Right",
     "Front",
@@ -169,14 +167,14 @@ vector<string> NeonText {
     "All"
 };
 
-unordered_map<eVehicleNeonLight, string> NeonBonesMap {
+std::unordered_map<eVehicleNeonLight, std::string> NeonBonesMap {
     { VehicleNeonLightLeft,  "neon_l" },
     { VehicleNeonLightRight, "neon_r" },
     { VehicleNeonLightFront, "neon_f" },
     { VehicleNeonLightBack,  "neon_b" },
 };
 
-vector<string> SirenBones {
+std::vector<std::string> SirenBones {
     "siren1" ,
     "siren2" ,
     "siren3" ,
@@ -212,36 +210,36 @@ void onExit() {
 void initRadioStations() {
     for (int i = 0; i < 256; i++) {
         if (strcmp(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)), "NULL") != 0) {
-            RadioStations.try_emplace(string(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i))), make_pair(i, string(AUDIO::GET_RADIO_STATION_NAME(i)) ));
+            RadioStations.try_emplace(std::string(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i))), make_pair(i, std::string(AUDIO::GET_RADIO_STATION_NAME(i)) ));
             RadioStationNames.push_back(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)));
         }
     }
-    RadioStations.try_emplace("Radio Off", make_pair( 255, "OFF" ));
+    RadioStations.try_emplace("Radio Off", std::make_pair( 255, "OFF" ));
     RadioStationNames.push_back("Radio Off");
     OffStationIndex = RadioStationNames.size() - 1;
 }
 
-string getGxtName(Hash hash) {
+std::string getGxtName(Hash hash) {
     char *name = VEHICLE::GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(hash);
-    string displayName = UI::_GET_LABEL_TEXT(name);
+    std::string displayName = UI::_GET_LABEL_TEXT(name);
     if (displayName == "NULL") {
         displayName = name;
     }
     return displayName;
 }
 
-pair<string, string> GetVehicleNames(Vehicle vehicle) {
+std::pair<std::string, std::string> GetVehicleNames(Vehicle vehicle) {
     Hash modelHash = ENTITY::GET_ENTITY_MODEL(vehicle);
     char* makeName = "NULL";//GetVehicleMakeName(modelHash);
-    string makeFinal;
+    std::string makeFinal;
     if (strcmp(UI::_GET_LABEL_TEXT(makeName), "NULL") == 0) {
         makeFinal = "";
     }
     else {
-        makeFinal = string(UI::_GET_LABEL_TEXT(makeName));
+        makeFinal = std::string(UI::_GET_LABEL_TEXT(makeName));
     }
 
-    return std::make_pair<string, string>(makeName, getGxtName(modelHash));
+    return std::make_pair<std::string, std::string>(makeName, getGxtName(modelHash));
 }
 
 bool HasBone(Entity e, char* bone) {
@@ -355,65 +353,65 @@ bool HasSiren(Vehicle veh) {
     return false;
 }
 
-string OptionNoVehicles = "No managed vehicles!";
-vector<string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
+std::string OptionNoVehicles = "No managed vehicles!";
+std::vector<std::string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
 
-string OptionVehicle = "Vehicle";
-string OptionVehicleDescriptionPart = "Currently controlled vehicle." ;
+std::string OptionVehicle = "Vehicle";
+std::string OptionVehicleDescriptionPart = "Currently controlled vehicle." ;
 
-string OptionPersistent = "Persistent";
-vector<string> OptionPersistentDescription = { "Prevent the vehicle from being removed by the game." };
+std::string OptionPersistent = "Persistent";
+std::vector<std::string> OptionPersistentDescription = { "Prevent the vehicle from being removed by the game." };
 
-string OptionEngineOn = "Engine on";
-vector<string> OptionEngineOnDescription = { "Pre-warm the car for those cold winter days." };
+std::string OptionEngineOn = "Engine on";
+std::vector<std::string> OptionEngineOnDescription = { "Pre-warm the car for those cold winter days." };
 
-string OptionRadio = "Radio";
-vector<string> OptionRadioDescription = { "Did someone say hearing loss?" };
+std::string OptionRadio = "Radio";
+std::vector<std::string> OptionRadioDescription = { "Did someone say hearing loss?" };
 
-string OptionLights = "Lights";
-vector<string> OptionLightsDescription = { "Honey did you forget to turn the lights off again?" };
+std::string OptionLights = "Lights";
+std::vector<std::string> OptionLightsDescription = { "Honey did you forget to turn the lights off again?" };
 
-string OptionFullbeam = "Full beam";
-vector<string> OptionFullbeamDescription = { "Blind yourself remotely!" };
+std::string OptionFullbeam = "Full beam";
+std::vector<std::string> OptionFullbeamDescription = { "Blind yourself remotely!" };
 
-string OptionBlinkers = "Indicators";
-vector<string> OptionBlinkersDescription = { "More blinkenlights are always better." };
+std::string OptionBlinkers = "Indicators";
+std::vector<std::string> OptionBlinkersDescription = { "More blinkenlights are always better." };
 
-string OptionAlarm = "Alarm";
-vector<string> OptionAlarmDescription = { "For if you need to scare your neighbors' kids from your car." };
+std::string OptionAlarm = "Alarm";
+std::vector<std::string> OptionAlarmDescription = { "For if you need to scare your neighbors' kids from your car." };
 
-string OptionRoof = "Toggle roof";
-vector<string> OptionRoofDescription = { "Your convertible is parked outside, it's starting to rain, but you can't get up." };
+std::string OptionRoof = "Toggle roof";
+std::vector<std::string> OptionRoofDescription = { "Your convertible is parked outside, it's starting to rain, but you can't get up." };
 
-string OptionBombbay = "Toggle bomb bays";
-vector<string> OptionBombbayDescription = { "Oh, that's why she was flying like a brick!" };
+std::string OptionBombbay = "Toggle bomb bays";
+std::vector<std::string> OptionBombbayDescription = { "Oh, that's why she was flying like a brick!" };
 
-string OptionLock = "Lock doors";
-vector<string> OptionLockDescription = { "It would suck having your car stolen!" };
+std::string OptionLock = "Lock doors";
+std::vector<std::string> OptionLockDescription = { "It would suck having your car stolen!" };
 
-string OptionDoors = "Open/close doors";
-vector<string> OptionDoorsDescription = { "Steal the show at a car meet." };
+std::string OptionDoors = "Open/close doors";
+std::vector<std::string> OptionDoorsDescription = { "Steal the show at a car meet." };
 
-string OptionWindows = "Roll windows up/down";
-vector<string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
+std::string OptionWindows = "Roll windows up/down";
+std::vector<std::string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
 
-string OptionNeon = "Neons";
-vector<string> OptionNeonDescription = { "Want a side of rice with that?" };
+std::string OptionNeon = "Neons";
+std::vector<std::string> OptionNeonDescription = { "Want a side of rice with that?" };
 
-string OptionSiren = "Sirens";
-vector<string> OptionSirenDescription = { "Remember to sprinkle some coke on him." };
+std::string OptionSiren = "Sirens";
+std::vector<std::string> OptionSirenDescription = { "Remember to sprinkle some coke on him." };
 
-string FormatVehicleName(vector<ManagedVehicle>::value_type v) {
+std::string FormatVehicleName(std::vector<ManagedVehicle>::value_type v) {
     auto p = GetVehicleNames(v.Vehicle);
-    string brand = p.first;
-    string name = p.second;
-    string plate = VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(v.Vehicle);
+    std::string brand = p.first;
+    std::string name = p.second;
+    std::string plate = VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(v.Vehicle);
     return fmt("%s (%s)", name, plate);
 }
 
 void update_mainmenu() {
     menu.Title("Vehicle Control");
-    menu.Subtitle(string("~b~") + DISPLAY_VERSION);
+    menu.Subtitle(std::string("~b~") + DISPLAY_VERSION);
 
     if (managedVehicles.empty()) {
         menu.Option(OptionNoVehicles, OptionNoVehiclesDescription);
@@ -423,7 +421,7 @@ void update_mainmenu() {
     if (currentVehicleIndex >= managedVehicles.size())
         currentVehicleIndex = managedVehicles.size() - 1;
 
-    vector<string> managedVehicleNames;
+    std::vector<std::string> managedVehicleNames;
     for (auto v : managedVehicles) {
         managedVehicleNames.push_back(FormatVehicleName(v));
     }
@@ -432,7 +430,7 @@ void update_mainmenu() {
     Vehicle veh = mVeh.Vehicle;
     bool isPersistent = ENTITY::IS_ENTITY_A_MISSION_ENTITY(veh);
 
-    vector<string> OptionVehicleDescription = {
+    std::vector<std::string> OptionVehicleDescription = {
         OptionVehicleDescriptionPart,
         fmt("%d / %d", currentVehicleIndex + 1, managedVehicleNames.size())
     };
@@ -476,31 +474,31 @@ void update_remotefunctionsmenu() {
         Hash model = ENTITY::GET_ENTITY_MODEL(mVeh.Vehicle);
         bool lIsEngineRunning = VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh);
         if (VEHICLE::IS_THIS_MODEL_A_PLANE(model)) {
-            pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_JET_ENGINE_ON, veh, true));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::_SET_VEHICLE_JET_ENGINE_ON, veh, true));
         }
-        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, !lIsEngineRunning, true, true));
+        pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_ENGINE_ON, veh, !lIsEngineRunning, true, true));
         PlayFobAnim(!lIsEngineRunning);
     }
 
     int lastRadio = mVeh.RadioIndex;
     if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
         if (lastRadio == mVeh.RadioIndex) {
-            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_ENABLED, veh, true));
-            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEHICLE_RADIO_LOUD, veh, true));
-            pendingTaskSequence.push_back(bind(&AUDIO::_0xC1805D05E6D4FE10, veh));
-            pendingTaskSequence.push_back(bind(&AUDIO::SET_VEH_RADIO_STATION, veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str()));
+            pendingTaskSequence.push_back(std::bind(&AUDIO::SET_VEHICLE_RADIO_ENABLED, veh, true));
+            pendingTaskSequence.push_back(std::bind(&AUDIO::SET_VEHICLE_RADIO_LOUD, veh, true));
+            pendingTaskSequence.push_back(std::bind(&AUDIO::_0xC1805D05E6D4FE10, veh));
+            pendingTaskSequence.push_back(std::bind(&AUDIO::SET_VEH_RADIO_STATION, veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str()));
             PlayFobAnim(false, true);
         }
     }
 
     if (menu.BoolOption(OptionLights, areLowBeamsOn_, OptionLightsDescription)) {
-        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_LIGHTS, veh, areLowBeamsOn_ ? 3 : 4));
+        pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_LIGHTS, veh, areLowBeamsOn_ ? 3 : 4));
         PlayFobAnim(false, true);
     }
 
     if (areLowBeamsOn) {
         if (menu.BoolOption(OptionFullbeam, areHighBeamsOn_, OptionFullbeamDescription)) {
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_FULLBEAM, veh, areHighBeamsOn_));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_FULLBEAM, veh, areHighBeamsOn_));
             PlayFobAnim(false, true);
         }
     }
@@ -510,23 +508,23 @@ void update_remotefunctionsmenu() {
         if (lastBlinker == mVeh.BlinkerIndex) {
             switch ((Blinker)lastBlinker) {
             case Blinker::Left: {
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
                 break;
             }
             case Blinker::Right: {
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
                 break;
             }
             case Blinker::Hazard: {
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, true)); // L
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, true)); // R
                 break;
             }
             default: {
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
-                pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 0, false)); // L
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_INDICATOR_LIGHTS, veh, 1, false)); // R
                 break;
             }
             }
@@ -537,12 +535,12 @@ void update_remotefunctionsmenu() {
 
     if (menu.BoolOption(OptionAlarm, isAlarm, OptionAlarmDescription)) {
         if (VEHICLE::IS_VEHICLE_ALARM_ACTIVATED(veh)) {
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ALARM, veh, false));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_ALARM, veh, false));
             PlayFobAnim(false);
         }
         else {
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_ALARM, veh, true));
-            pendingTaskSequence.push_back(bind(&VEHICLE::START_VEHICLE_ALARM, veh));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_ALARM, veh, true));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::START_VEHICLE_ALARM, veh));
             PlayFobAnim(true);
         }
     }
@@ -550,14 +548,14 @@ void update_remotefunctionsmenu() {
     if (HasSiren(veh)) {
         if (menu.BoolOption(OptionSiren, isSiren, OptionSirenDescription)) {
             bool isSirenOn = VEHICLE::IS_VEHICLE_SIREN_ON(veh);
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_SIREN, veh, !isSirenOn));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_SIREN, veh, !isSirenOn));
             PlayFobAnim(false, true);
         }
     }
 
     if (HasNeon(veh) && CanUseNeonNative) {
         if (menu.BoolOption("Neon", mVeh.NeonOn)) {
-            pendingTaskSequence.push_back(bind(&_SET_VEHICLE_NEON_ON, veh, !mVeh.NeonOn));
+            pendingTaskSequence.push_back(std::bind(&_SET_VEHICLE_NEON_ON, veh, !mVeh.NeonOn));
             //invoke<Void>(0x83F813570FF519DE, veh, !mVeh.NeonOn);
             PlayFobAnim(false, true);
         }
@@ -583,7 +581,7 @@ void update_doormenu() {
                 lockStatusIndex++;
             }
             lockStatusIndex = lockStatusIndex % 2;
-            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOORS_LOCKED, veh, static_cast<int>(LockStatuses[lockStatusIndex])));
+            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_DOORS_LOCKED, veh, static_cast<int>(LockStatuses[lockStatusIndex])));
             if (LockStatuses[lockStatusIndex] == LockStatus::Locked) {
                 PlayFobAnim(true);
             }
@@ -605,24 +603,24 @@ void update_doormenu() {
                     }
                     if (isAnyDoorOpen) {
                         for (int i = 0; i < NumDoors; ++i) {
-                            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, i, false));
+                            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, i, false));
                             PlayFobAnim(false);
                         }
                     }
                     else {
                         for (int i = 0; i < NumDoors; ++i) {
-                            pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, i, false, false));
+                            pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, i, false, false));
                             PlayFobAnim(true);
                         }
                     }
                 }
                 else {
                     if (VEHICLE::GET_VEHICLE_DOOR_ANGLE_RATIO(veh, mVeh.DoorIndex) > 0.0f) {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, mVeh.DoorIndex, false));
+                        pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_DOOR_SHUT, veh, mVeh.DoorIndex, false));
                         PlayFobAnim(false);
                     }
                     else {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, mVeh.DoorIndex, false, false));
+                        pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_DOOR_OPEN, veh, mVeh.DoorIndex, false, false));
                         PlayFobAnim(true);
                     }
                 }
@@ -661,13 +659,13 @@ void update_doormenu() {
                     }
                     if (isAnyWindowDown) {
                         for (int i = 0; i < NumWindows; ++i) {
-                            pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_UP_WINDOW, veh, i));
+                            pendingTaskSequence.push_back(std::bind(&VEHICLE::ROLL_UP_WINDOW, veh, i));
                             mVeh.WindowState[i] = WindowState::Up;
                         }
                         PlayFobAnim(false);
                     }
                     else {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_DOWN_WINDOWS, veh));
+                        pendingTaskSequence.push_back(std::bind(&VEHICLE::ROLL_DOWN_WINDOWS, veh));
                         PlayFobAnim(true);
                         for (int i = 0; i < NumWindows; ++i) {
                             mVeh.WindowState[i] = WindowState::Down;
@@ -676,12 +674,12 @@ void update_doormenu() {
                 }
                 else {
                     if (mVeh.WindowState[mVeh.WindowIndex] == WindowState::Down) {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_UP_WINDOW, veh, mVeh.WindowIndex));
+                        pendingTaskSequence.push_back(std::bind(&VEHICLE::ROLL_UP_WINDOW, veh, mVeh.WindowIndex));
                         PlayFobAnim(false);
                         mVeh.WindowState[mVeh.WindowIndex] = WindowState::Up;
                     }
                     else {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::ROLL_DOWN_WINDOW, veh, mVeh.WindowIndex));
+                        pendingTaskSequence.push_back(std::bind(&VEHICLE::ROLL_DOWN_WINDOW, veh, mVeh.WindowIndex));
                         PlayFobAnim(true);
                         mVeh.WindowState[mVeh.WindowIndex] = WindowState::Down;
                     }
@@ -713,11 +711,11 @@ void update_doormenu() {
     if (VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false)) {
         if (menu.Option(OptionRoof, OptionRoofDescription)) {
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 0) {
-                pendingTaskSequence.push_back(bind(&VEHICLE::LOWER_CONVERTIBLE_ROOF, veh, false));
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::LOWER_CONVERTIBLE_ROOF, veh, false));
                 PlayFobAnim(true);
             }
             if (VEHICLE::GET_CONVERTIBLE_ROOF_STATE(veh) == 2) {
-                pendingTaskSequence.push_back(bind(&VEHICLE::RAISE_CONVERTIBLE_ROOF, veh, false));
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::RAISE_CONVERTIBLE_ROOF, veh, false));
                 PlayFobAnim(false);
             }
         }
@@ -728,11 +726,11 @@ void update_doormenu() {
             mVeh.BombBayIndex++;
             mVeh.BombBayIndex %= 2;
             if (mVeh.BombBayIndex == 0) {
-                pendingTaskSequence.push_back(bind(&VEHICLE::CLOSE_BOMB_BAY_DOORS, veh));
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::CLOSE_BOMB_BAY_DOORS, veh));
                 PlayFobAnim(false);
             }
             if (mVeh.BombBayIndex == 1) {
-                pendingTaskSequence.push_back(bind(&VEHICLE::OPEN_BOMB_BAY_DOORS, veh));
+                pendingTaskSequence.push_back(std::bind(&VEHICLE::OPEN_BOMB_BAY_DOORS, veh));
                 PlayFobAnim(true);
             }
         }
