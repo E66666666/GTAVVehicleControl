@@ -25,7 +25,7 @@ public:
           BombBayIndex(0),
           RadioIndex(radioIdx),
           WindowIndex(0),
-          NeonIndex(0) {
+          NeonOn(true) {
         WindowState[0] = WindowState::Up;
         WindowState[1] = WindowState::Up;
         WindowState[2] = WindowState::Up;
@@ -42,6 +42,6 @@ public:
     int BombBayIndex;
     int RadioIndex;
     int WindowIndex;
-    int NeonIndex;
+    bool NeonOn;
     WindowState WindowState[4];
 };

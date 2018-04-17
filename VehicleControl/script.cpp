@@ -5,9 +5,9 @@
 #include "Util/Paths.h"
 #include "Util/Logger.hpp"
 #include "Util/UIUtils.h"
+#include "Versions.h"
 
-int textureBgId;
-int textureBgId2;
+bool CanUseNeonNative = false;
 
 NativeMenu::Menu menu;
 std::string settingsMenuFile;
@@ -52,6 +52,8 @@ void update_managedVehicles() {
 }
 
 void main() {
+    CanUseNeonNative = getGameVersion() >= G_VER_1_0_573_1_STEAM;
+
     logger.Write(INFO, "Script started");
 
     settingsMenuFile = Paths::GetModuleFolder(Paths::GetOurModuleHandle()) + modDir + "\\settings_menu.ini";

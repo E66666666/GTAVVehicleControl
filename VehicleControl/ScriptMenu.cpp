@@ -18,6 +18,7 @@ extern Vehicle lastVehicle;
 
 extern vector<ManagedVehicle> managedVehicles;
 extern int OffStationIndex;
+extern bool CanUseNeonNative;
 
 int currentVehicleIndex = 0;
 bool pendingExtern = false;
@@ -32,6 +33,8 @@ bool fobBlop = false;
 // GXT name, station number, internal name
 unordered_map<string, pair<int, string>> RadioStations;
 vector<string> RadioStationNames; // GXT names
+
+static void _SET_VEHICLE_NEON_ON(Vehicle vehicle, BOOL value) { invoke<Void>(0x83F813570FF519DE, vehicle, value); }
 
 enum class LockStatus : int {
     None,
@@ -552,24 +555,11 @@ void update_remotefunctionsmenu() {
         }
     }
 
-    if (HasNeon(veh)) {
-        int lastNeonIndex = mVeh.NeonIndex;
-        if (menu.StringArray(OptionNeon, NeonText, mVeh.NeonIndex, OptionNeonDescription)) {
-            bool isAnyNeonOn = false;
-            for (int i = 0; i < 4; ++i) {
-                isAnyNeonOn |= VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, i) == TRUE;
-            }
-            if (lastNeonIndex == mVeh.NeonIndex) {
-                if (NeonText[lastNeonIndex] == "All") {
-                    for (int i = 0; i < 4; ++i) {
-                        pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED, veh, i, !isAnyNeonOn));
-                    }
-                }
-                else {
-                    pendingTaskSequence.push_back(bind(&VEHICLE::_SET_VEHICLE_NEON_LIGHT_ENABLED, veh, lastNeonIndex, !VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, lastNeonIndex)));
-                }
-                PlayFobAnim(false, true);
-            }
+    if (HasNeon(veh) && CanUseNeonNative) {
+        if (menu.BoolOption("Neon", mVeh.NeonOn)) {
+            pendingTaskSequence.push_back(bind(&_SET_VEHICLE_NEON_ON, veh, !mVeh.NeonOn));
+            //invoke<Void>(0x83F813570FF519DE, veh, !mVeh.NeonOn);
+            PlayFobAnim(false, true);
         }
     }
 }
