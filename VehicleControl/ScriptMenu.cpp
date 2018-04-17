@@ -32,7 +32,7 @@ bool fobBlop = false;
 std::unordered_map<std::string, std::pair<int, std::string>> RadioStations;
 std::vector<std::string> RadioStationNames; // GXT names
 
-static void _SET_VEHICLE_NEON_ON(Vehicle vehicle, BOOL value) { invoke<Void>(0x83F813570FF519DE, vehicle, value); }
+static void _DISABLE_VEHICLE_NEON_LIGHTS(Vehicle vehicle, BOOL disable) { invoke<Void>(0x83F813570FF519DE, vehicle, disable); }
 
 enum class LockStatus : int {
     None,
@@ -503,6 +503,13 @@ void update_remotefunctionsmenu() {
         }
     }
 
+    if (HasNeon(veh) && CanUseNeonNative) {
+        if (menu.BoolOption("Neon", mVeh.NeonOn)) {
+            pendingTaskSequence.push_back(std::bind(&_DISABLE_VEHICLE_NEON_LIGHTS, veh, !mVeh.NeonOn));
+            PlayFobAnim(false, true);
+        }
+    }
+
     int lastBlinker = mVeh.BlinkerIndex;
     if (menu.StringArray(OptionBlinkers, BlinkerText, lastBlinker, OptionBlinkersDescription)) {
         if (lastBlinker == mVeh.BlinkerIndex) {
@@ -549,14 +556,6 @@ void update_remotefunctionsmenu() {
         if (menu.BoolOption(OptionSiren, isSiren, OptionSirenDescription)) {
             bool isSirenOn = VEHICLE::IS_VEHICLE_SIREN_ON(veh);
             pendingTaskSequence.push_back(std::bind(&VEHICLE::SET_VEHICLE_SIREN, veh, !isSirenOn));
-            PlayFobAnim(false, true);
-        }
-    }
-
-    if (HasNeon(veh) && CanUseNeonNative) {
-        if (menu.BoolOption("Neon", mVeh.NeonOn)) {
-            pendingTaskSequence.push_back(std::bind(&_SET_VEHICLE_NEON_ON, veh, !mVeh.NeonOn));
-            //invoke<Void>(0x83F813570FF519DE, veh, !mVeh.NeonOn);
             PlayFobAnim(false, true);
         }
     }
