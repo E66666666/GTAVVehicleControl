@@ -52,7 +52,6 @@ void update_managedVehicles() {
 }
 
 void main() {
-    AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     logger.Write(INFO, "Script started");
 
     settingsMenuFile = Paths::GetModuleFolder(Paths::GetOurModuleHandle()) + modDir + "\\settings_menu.ini";

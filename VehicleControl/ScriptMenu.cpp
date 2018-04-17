@@ -197,10 +197,12 @@ vector<string> SirenBones {
 };
 
 void onMain() {
+    AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     menu.ReadSettings();
 }
 
 void onExit() {
+    AUDIO::SET_AUDIO_FLAG("LoadMPData", false);
 
 }
 
