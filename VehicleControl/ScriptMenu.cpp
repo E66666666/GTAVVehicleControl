@@ -345,6 +345,14 @@ bool HasNeon(Vehicle veh) {
     return hasNeon;
 }
 
+bool IsNeonEnabled(Vehicle veh) {
+    for (int i = 0; i < 4; ++i) {
+        if (VEHICLE::_IS_VEHICLE_NEON_LIGHT_ENABLED(veh, i))
+            return true;
+    }
+    return false;
+}
+
 bool HasSiren(Vehicle veh) {
     for (auto siren : SirenBones) {
         if (HasBone(veh, (char*)siren.c_str()))
@@ -503,7 +511,7 @@ void update_remotefunctionsmenu() {
         }
     }
 
-    if (HasNeon(veh) && CanUseNeonNative) {
+    if (CanUseNeonNative && HasNeon(veh) && IsNeonEnabled(veh)) {
         if (menu.BoolOption("Neon", mVeh.NeonOn)) {
             pendingTaskSequence.push_back(std::bind(&_DISABLE_VEHICLE_NEON_LIGHTS, veh, !mVeh.NeonOn));
             PlayFobAnim(false, true);
