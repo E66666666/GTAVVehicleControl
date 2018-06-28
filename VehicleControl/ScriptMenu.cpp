@@ -364,6 +364,14 @@ bool HasSiren(Vehicle veh) {
     return false;
 }
 
+std::string TitleMain = "Vehicle Control";
+
+std::string SubMenuOptionDoors = "Doors";
+std::string SubMenuTitleDoors = "Door control";
+
+std::string SubMenuOptionRemote = "Remote functions";
+std::string SubMenuTitleRemote = "Remote Functions";
+
 std::string OptionNoVehicles = "No managed vehicles!";
 std::vector<std::string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
 
@@ -406,7 +414,7 @@ std::vector<std::string> OptionDoorsDescription = { "Steal the show at a car mee
 std::string OptionWindows = "Roll windows up/down";
 std::vector<std::string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
 
-std::string OptionNeon = "Neons";
+std::string OptionNeon = "Neon";
 std::vector<std::string> OptionNeonDescription = { "Want a side of rice with that?" };
 
 std::string OptionSiren = "Sirens";
@@ -421,7 +429,7 @@ std::string FormatVehicleName(std::vector<ManagedVehicle>::value_type v) {
 }
 
 void update_mainmenu() {
-    menu.Title("Vehicle Control");
+    menu.Title(TitleMain);
     menu.Subtitle(std::string("~b~") + DISPLAY_VERSION);
 
     if (managedVehicles.empty()) {
@@ -457,12 +465,12 @@ void update_mainmenu() {
         }
     }
 
-    menu.MenuOption("Remote functions", "remotefunctionsmenu");
+    menu.MenuOption(SubMenuOptionRemote, "remotefunctionsmenu");
 
     if (HasBone(veh, "door_hatch_l") && HasBone(veh, "door_hatch_r") ||
         VEHICLE::IS_VEHICLE_A_CONVERTIBLE(veh, false) ||
         HasDoors(veh)) {
-        menu.MenuOption("Doors", "doormenu");
+        menu.MenuOption(SubMenuOptionDoors, "doormenu");
     }
 }
 
@@ -470,7 +478,7 @@ void update_remotefunctionsmenu() {
     ManagedVehicle& mVeh = managedVehicles[currentVehicleIndex];
     Vehicle veh = mVeh.Vehicle;
 
-    menu.Title("Remote Functions");
+    menu.Title(SubMenuTitleRemote);
     menu.Subtitle("~b~" + FormatVehicleName(mVeh));
 
     bool isEngineOn = VEHICLE::GET_IS_VEHICLE_ENGINE_RUNNING(veh);
@@ -515,7 +523,7 @@ void update_remotefunctionsmenu() {
     }
 
     if (CanUseNeonNative && HasNeon(veh) && IsNeonEnabled(veh)) {
-        if (menu.BoolOption("Neon", mVeh.NeonOn)) {
+        if (menu.BoolOption(OptionNeon, mVeh.NeonOn, OptionNeonDescription)) {
             pendingTaskSequence.push_back(std::bind(&_DISABLE_VEHICLE_NEON_LIGHTS, veh, !mVeh.NeonOn));
             PlayFobAnim(false, true);
         }
@@ -576,7 +584,7 @@ void update_doormenu() {
     ManagedVehicle& mVeh = managedVehicles[currentVehicleIndex];
     Vehicle veh = mVeh.Vehicle;
 
-    menu.Title("Door Control");
+    menu.Title(SubMenuTitleDoors);
     menu.Subtitle("~b~" + FormatVehicleName(mVeh));
     
     LockStatus lockStatus = (LockStatus)VEHICLE::GET_VEHICLE_DOOR_LOCK_STATUS(veh);
@@ -662,7 +670,7 @@ void update_doormenu() {
         int lastWindowIndex = mVeh.WindowIndex;
         if (menu.StringArray(OptionWindows, VehicleWindowText, mVeh.WindowIndex, OptionWindowsDescription)) {
             if (lastWindowIndex == mVeh.WindowIndex) {
-                if (VehicleWindowText[mVeh.WindowIndex] == "All Windows") {
+                if (VehicleWindowText[mVeh.WindowIndex] == VehicleWindowText.back()) {
                     bool isAnyWindowDown = false;
                     for (int i = 0; i < NumWindows; ++i) {
                         isAnyWindowDown |= (mVeh.WindowState[i]) == WindowState::Down;
