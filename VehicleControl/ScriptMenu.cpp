@@ -198,6 +198,62 @@ std::vector<std::string> SirenBones {
     "siren20",
 };
 
+std::string TitleMain = "Vehicle Control";
+
+std::string SubMenuOptionDoors = "Doors";
+std::string SubMenuTitleDoors = "Door control";
+
+std::string SubMenuOptionRemote = "Remote functions";
+std::string SubMenuTitleRemote = "Remote Functions";
+
+std::string OptionNoVehicles = "No managed vehicles!";
+std::vector<std::string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
+
+std::string OptionVehicle = "Vehicle";
+std::string OptionVehicleDescriptionPart = "Currently controlled vehicle.";
+
+std::string OptionPersistent = "Persistent";
+std::vector<std::string> OptionPersistentDescription = { "Prevent the vehicle from being removed by the game." };
+
+std::string OptionEngineOn = "Engine on";
+std::vector<std::string> OptionEngineOnDescription = { "Pre-warm the car for those cold winter days." };
+
+std::string OptionRadio = "Radio";
+std::vector<std::string> OptionRadioDescription = { "Did someone say hearing loss?" };
+
+std::string OptionLights = "Lights";
+std::vector<std::string> OptionLightsDescription = { "Honey did you forget to turn the lights off again?" };
+
+std::string OptionFullbeam = "Full beam";
+std::vector<std::string> OptionFullbeamDescription = { "Blind yourself remotely!" };
+
+std::string OptionBlinkers = "Indicators";
+std::vector<std::string> OptionBlinkersDescription = { "More blinkenlights are always better." };
+
+std::string OptionAlarm = "Alarm";
+std::vector<std::string> OptionAlarmDescription = { "For if you need to scare your neighbors' kids from your car." };
+
+std::string OptionRoof = "Toggle roof";
+std::vector<std::string> OptionRoofDescription = { "Your convertible is parked outside, it's starting to rain, but you can't get up." };
+
+std::string OptionBombbay = "Toggle bomb bays";
+std::vector<std::string> OptionBombbayDescription = { "Oh, that's why she was flying like a brick!" };
+
+std::string OptionLock = "Lock doors";
+std::vector<std::string> OptionLockDescription = { "It would suck having your car stolen!" };
+
+std::string OptionDoors = "Open/close doors";
+std::vector<std::string> OptionDoorsDescription = { "Steal the show at a car meet." };
+
+std::string OptionWindows = "Roll windows up/down";
+std::vector<std::string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
+
+std::string OptionNeon = "Neon";
+std::vector<std::string> OptionNeonDescription = { "Want a side of rice with that?" };
+
+std::string OptionSiren = "Sirens";
+std::vector<std::string> OptionSirenDescription = { "Remember to sprinkle some coke on him." };
+
 void onMain() {
     AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     menu.ReadSettings();
@@ -363,62 +419,6 @@ bool HasSiren(Vehicle veh) {
     }
     return false;
 }
-
-std::string TitleMain = "Vehicle Control";
-
-std::string SubMenuOptionDoors = "Doors";
-std::string SubMenuTitleDoors = "Door control";
-
-std::string SubMenuOptionRemote = "Remote functions";
-std::string SubMenuTitleRemote = "Remote Functions";
-
-std::string OptionNoVehicles = "No managed vehicles!";
-std::vector<std::string> OptionNoVehiclesDescription = { "Vehicle Control keeps track of vehicles you entered. Enter a vehicle to use the script!" };
-
-std::string OptionVehicle = "Vehicle";
-std::string OptionVehicleDescriptionPart = "Currently controlled vehicle." ;
-
-std::string OptionPersistent = "Persistent";
-std::vector<std::string> OptionPersistentDescription = { "Prevent the vehicle from being removed by the game." };
-
-std::string OptionEngineOn = "Engine on";
-std::vector<std::string> OptionEngineOnDescription = { "Pre-warm the car for those cold winter days." };
-
-std::string OptionRadio = "Radio";
-std::vector<std::string> OptionRadioDescription = { "Did someone say hearing loss?" };
-
-std::string OptionLights = "Lights";
-std::vector<std::string> OptionLightsDescription = { "Honey did you forget to turn the lights off again?" };
-
-std::string OptionFullbeam = "Full beam";
-std::vector<std::string> OptionFullbeamDescription = { "Blind yourself remotely!" };
-
-std::string OptionBlinkers = "Indicators";
-std::vector<std::string> OptionBlinkersDescription = { "More blinkenlights are always better." };
-
-std::string OptionAlarm = "Alarm";
-std::vector<std::string> OptionAlarmDescription = { "For if you need to scare your neighbors' kids from your car." };
-
-std::string OptionRoof = "Toggle roof";
-std::vector<std::string> OptionRoofDescription = { "Your convertible is parked outside, it's starting to rain, but you can't get up." };
-
-std::string OptionBombbay = "Toggle bomb bays";
-std::vector<std::string> OptionBombbayDescription = { "Oh, that's why she was flying like a brick!" };
-
-std::string OptionLock = "Lock doors";
-std::vector<std::string> OptionLockDescription = { "It would suck having your car stolen!" };
-
-std::string OptionDoors = "Open/close doors";
-std::vector<std::string> OptionDoorsDescription = { "Steal the show at a car meet." };
-
-std::string OptionWindows = "Roll windows up/down";
-std::vector<std::string> OptionWindowsDescription = { "Did you really think your beater would have A/C?" };
-
-std::string OptionNeon = "Neon";
-std::vector<std::string> OptionNeonDescription = { "Want a side of rice with that?" };
-
-std::string OptionSiren = "Sirens";
-std::vector<std::string> OptionSirenDescription = { "Remember to sprinkle some coke on him." };
 
 std::string FormatVehicleName(std::vector<ManagedVehicle>::value_type v) {
     auto p = GetVehicleNames(v.Vehicle);
