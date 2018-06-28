@@ -1,6 +1,7 @@
 #include "script.h"
 
 #include <menu.h>
+#include <inc/natives.h>
 
 #include "Util/Paths.h"
 #include "Util/Logger.hpp"
