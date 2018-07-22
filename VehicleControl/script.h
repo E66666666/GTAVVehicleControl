@@ -1,7 +1,7 @@
 #pragma once
 #include <inc/types.h>
 
-#define DISPLAY_VERSION "v1.1.0"
+#define DISPLAY_VERSION "v1.1.1"
 
 const char* const modDir  = "\\VehicleControl";
 
