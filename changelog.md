@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.1
+* Fix a bug where a spawned fob would not be removed properly
+
 ## v1.1.0
 * Add siren
 * Add neon toggle option

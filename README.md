@@ -4,7 +4,7 @@ Vehicle Control
 A simple script based on [my menu base](https://github.com/E66666666/GTAVMenuBase). Lets you control the vehicle remotely.
 
 ## Downloads
-N/A
+[Remote Vehicle Control at GTA5-Mods.com](https://www.gta5-mods.com/scripts/remote-vehicle-control)
 
 ## Building
 
