@@ -8,6 +8,7 @@
 #include "Util/UIUtils.h"
 #include "Versions.h"
 #include "ManagedVehicle.h"
+#include "Util/StringFormat.h"
 
 // TODO: Control trailer
 // TODO: Get in as passenger
@@ -29,6 +30,9 @@ std::vector<ManagedVehicle> managedVehicles;
 // Inits to "OFF" index in the script radio list
 int OffStationIndex = 0;
 
+// Implementation in ScriptMenu.cpp but too lazy to properly move around atm
+std::string getGxtName(Hash hash);
+
 void update_game() {
     player = PLAYER::PLAYER_ID();
     playerPed = PLAYER::PLAYER_PED_ID();
@@ -41,7 +45,12 @@ void update_game() {
         [](ManagedVehicle const& v) { return v.Vehicle == currentVehicle; });
     if (foundVehicle == managedVehicles.end()) {
         // TODO: Something to determine current vehicle radio station.
-        managedVehicles.push_back(ManagedVehicle(currentVehicle, OffStationIndex));
+        managedVehicles.emplace_back(currentVehicle, OffStationIndex);
+        std::string blipName = fmt("%s (%s)", 
+            getGxtName(ENTITY::GET_ENTITY_MODEL(currentVehicle)), 
+            VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(currentVehicle));
+        managedVehicles.back().Blip = new Blip_(currentVehicle, BlipSpriteStandard, blipName, BlipColorWhite, true);
+        managedVehicles.back().Blip->SetAlpha(0);
     }
 }
 
@@ -53,6 +62,8 @@ void update_managedVehicles() {
     }
 
     for (auto v : stale) {
+        v.Blip->Delete();
+        delete v.Blip;
         managedVehicles.erase(std::remove(managedVehicles.begin(), managedVehicles.end(), v), managedVehicles.end());
     }
 }

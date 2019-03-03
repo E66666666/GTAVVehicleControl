@@ -472,6 +472,11 @@ void update_mainmenu() {
         HasDoors(veh)) {
         menu.MenuOption(SubMenuOptionDoors, "doormenu");
     }
+
+    bool blipVisible = mVeh.Blip->GetAlpha() > 0;
+    if (menu.BoolOption("Show blip", blipVisible, {})) {
+        mVeh.Blip->SetAlpha(blipVisible ? 255 : 0);
+    }
 }
 
 void update_remotefunctionsmenu() {
