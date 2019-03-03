@@ -178,6 +178,8 @@
     <ClInclude Include="..\..\ScriptHookV_SDK\inc\main.h" />
     <ClInclude Include="..\..\ScriptHookV_SDK\inc\natives.h" />
     <ClInclude Include="..\..\ScriptHookV_SDK\inc\types.h" />
+    <ClInclude Include="Blip.h" />
+    <ClInclude Include="ManagedVehicle.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="Util\Logger.hpp" />
     <ClInclude Include="Util\Paths.h" />

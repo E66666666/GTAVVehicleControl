@@ -4,6 +4,7 @@
 #include <menu.h>
 #include "Util/StringFormat.h"
 #include "Util/UIUtils.h"
+#include "ManagedVehicle.h"
 
 const int NumDoors = 6;
 const int NumWindows = 4;
@@ -261,7 +262,6 @@ void onMain() {
 
 void onExit() {
     AUDIO::SET_AUDIO_FLAG("LoadMPData", false);
-
 }
 
 void initRadioStations() {

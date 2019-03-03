@@ -86,6 +86,8 @@
     <ClInclude Include="Util\UIUtils.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="ManagedVehicle.h" />
+    <ClInclude Include="Blip.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

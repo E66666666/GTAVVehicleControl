@@ -7,6 +7,11 @@
 #include "Util/Logger.hpp"
 #include "Util/UIUtils.h"
 #include "Versions.h"
+#include "ManagedVehicle.h"
+
+// TODO: Control trailer
+// TODO: Get in as passenger
+// TODO: Blips
 
 bool CanUseNeonNative = false;
 
