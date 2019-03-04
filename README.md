@@ -1,10 +1,14 @@
 Vehicle Control
 ---------------
 
+[![Build status](https://ci.appveyor.com/api/projects/status/8tc7y9tm988gqwuq/branch/master?svg=true)](https://ci.appveyor.com/project/E66666666/gtavvehiclecontrol/branch/master)
+
+
 A simple script based on [my menu base](https://github.com/E66666666/GTAVMenuBase). Lets you control the vehicle remotely.
 
 ## Downloads
 [Remote Vehicle Control at GTA5-Mods.com](https://www.gta5-mods.com/scripts/remote-vehicle-control)
+[AppVeyor builds](https://ci.appveyor.com/project/E66666666/gtavvehiclecontrol/build/artifacts)
 
 ## Building
 
