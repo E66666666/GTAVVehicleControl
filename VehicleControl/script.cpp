@@ -12,7 +12,6 @@
 
 // TODO: Control trailer
 // TODO: Get in as passenger
-// TODO: Blips
 
 bool CanUseNeonNative = false;
 
