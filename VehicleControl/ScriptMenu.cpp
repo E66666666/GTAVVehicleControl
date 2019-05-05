@@ -256,12 +256,10 @@ std::string OptionSiren = "Sirens";
 std::vector<std::string> OptionSirenDescription = { "Remember to sprinkle some coke on him." };
 
 void onMain() {
-    AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     menu.ReadSettings();
 }
 
 void onExit() {
-    AUDIO::SET_AUDIO_FLAG("LoadMPData", false);
 }
 
 void initRadioStations() {
@@ -504,14 +502,18 @@ void update_remotefunctionsmenu() {
         PlayFobAnim(!lIsEngineRunning);
     }
 
-    int lastRadio = mVeh.RadioIndex;
-    if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioIndex, OptionRadioDescription)) {
-        if (lastRadio == mVeh.RadioIndex) {
-            pendingTaskSequence.push_back([=]() {
+    int lastRadio = mVeh.RadioMenuIndex;
+    auto radioDescription = OptionRadioDescription;
+    const char* stationName = UI::_GET_LABEL_TEXT((char*)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
+    radioDescription.push_back(fmt("Last tuned to %s", RadioStationNames[mVeh.RadioIndex].c_str()));
+    if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioMenuIndex, radioDescription)) {
+        if (lastRadio == mVeh.RadioMenuIndex) {
+            pendingTaskSequence.push_back([&]() {
                 AUDIO::SET_VEHICLE_RADIO_ENABLED(veh, true);
                 AUDIO::SET_VEHICLE_RADIO_LOUD(veh, true);
                 AUDIO::_0xC1805D05E6D4FE10(veh);
-                AUDIO::SET_VEH_RADIO_STATION(veh, (char *)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
+                AUDIO::SET_VEH_RADIO_STATION(veh, (char *)RadioStations[RadioStationNames[mVeh.RadioMenuIndex]].second.c_str());
+                mVeh.RadioIndex = mVeh.RadioMenuIndex;
             });
             PlayFobAnim(false, true);
         }

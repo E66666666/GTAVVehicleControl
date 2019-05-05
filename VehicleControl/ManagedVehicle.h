@@ -15,6 +15,7 @@ public:
         , BlinkerIndex(0)
         , BombBayIndex(0)
         , RadioIndex(radioIdx)
+        , RadioMenuIndex(radioIdx)
         , WindowIndex(0)
         , NeonOn(true)
         , WindowState{
@@ -34,6 +35,7 @@ public:
     int BlinkerIndex;
     int BombBayIndex;
     int RadioIndex;
+    int RadioMenuIndex;
     int WindowIndex;
     bool NeonOn;
     WindowState WindowState[4];

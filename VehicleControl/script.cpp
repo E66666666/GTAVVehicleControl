@@ -32,6 +32,15 @@ int OffStationIndex = 0;
 // Implementation in ScriptMenu.cpp but too lazy to properly move around atm
 std::string getGxtName(Hash hash);
 
+
+// bah
+extern std::vector<std::string> RadioStationNames;
+int getFixedRadioIdx() {
+    if (AUDIO::GET_PLAYER_RADIO_STATION_INDEX() > RadioStationNames.size() - 1)
+        return RadioStationNames.size() - 1;
+    return AUDIO::GET_PLAYER_RADIO_STATION_INDEX();
+}
+
 void update_game() {
     player = PLAYER::PLAYER_ID();
     playerPed = PLAYER::PLAYER_PED_ID();
@@ -43,8 +52,7 @@ void update_game() {
     auto foundVehicle = std::find_if(managedVehicles.begin(), managedVehicles.end(), 
         [](ManagedVehicle const& v) { return v.Vehicle == currentVehicle; });
     if (foundVehicle == managedVehicles.end()) {
-        // TODO: Something to determine current vehicle radio station.
-        managedVehicles.emplace_back(currentVehicle, OffStationIndex);
+        managedVehicles.emplace_back(currentVehicle, getFixedRadioIdx());
         std::string blipName = fmt("%s (%s)", 
             getGxtName(ENTITY::GET_ENTITY_MODEL(currentVehicle)), 
             VEHICLE::GET_VEHICLE_NUMBER_PLATE_TEXT(currentVehicle));
@@ -55,9 +63,14 @@ void update_game() {
 
 void update_managedVehicles() {
     std::vector<ManagedVehicle> stale;
-    for (auto v : managedVehicles) {
-        if (!ENTITY::DOES_ENTITY_EXIST(v.Vehicle))
+    for (auto &v : managedVehicles) {
+        if (!ENTITY::DOES_ENTITY_EXIST(v.Vehicle)) {
             stale.push_back(v);
+        }
+        else {
+            if (PED::IS_PED_IN_VEHICLE(playerPed, v.Vehicle, false))
+                v.RadioIndex = getFixedRadioIdx();
+        }
     }
 
     for (auto v : stale) {
@@ -69,7 +82,7 @@ void update_managedVehicles() {
 
 void main() {
     CanUseNeonNative = getGameVersion() >= G_VER_1_0_573_1_STEAM;
-
+	AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     logger.Write(INFO, "Script started");
 
     settingsMenuFile = Paths::GetModuleFolder(Paths::GetOurModuleHandle()) + modDir + "\\settings_menu.ini";
