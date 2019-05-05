@@ -30,6 +30,8 @@ bool fobBeepOn = false;
 bool fobBeepMute = false;
 bool fobBlop = false;
 
+int stashedWeaponIndex;
+
 // GXT name, station number, internal name
 std::unordered_map<std::string, std::pair<int, std::string>> RadioStations;
 std::vector<std::string> RadioStationNames; // GXT names
@@ -348,7 +350,7 @@ void PlayFobAnim(bool beepOn, bool mute = false) {
     while (!STREAMING::HAS_ANIM_DICT_LOADED("anim@mp_player_intmenu@key_fob@")) {
         WAIT(0);
     }
-    WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
+    WEAPON::SET_PED_CURRENT_WEAPON_VISIBLE(PLAYER::PLAYER_PED_ID(), false, false, true, true);
     AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
 
@@ -384,6 +386,7 @@ void UpdateFob() {
         fob = 0;
         fobPlaying = false;
         fobBlop = false;
+        WEAPON::SET_PED_CURRENT_WEAPON_VISIBLE(PLAYER::PLAYER_PED_ID(), true, false, true, true);
     }
 }
 
