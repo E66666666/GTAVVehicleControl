@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.2
+* Recompile, fixes menu locking out player selection
+* Add blip option for cars
+* Detect current radio station
+* Hide weapon instead of switching to unarmed
+
 ## v1.1.1
 * Fix a bug where a spawned fob would not be removed properly
 
