@@ -29,6 +29,7 @@ bool fobPlaying = false;
 bool fobBeepOn = false;
 bool fobBeepMute = false;
 bool fobBlop = false;
+Hash currentWeaponHash;
 
 int stashedWeaponIndex;
 
@@ -350,7 +351,14 @@ void PlayFobAnim(bool beepOn, bool mute = false) {
     while (!STREAMING::HAS_ANIM_DICT_LOADED("anim@mp_player_intmenu@key_fob@")) {
         WAIT(0);
     }
-    WEAPON::SET_PED_CURRENT_WEAPON_VISIBLE(PLAYER::PLAYER_PED_ID(), false, false, true, true);
+    Hash weaponHash;
+    if (WEAPON::GET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), &weaponHash, true)) {
+        currentWeaponHash = weaponHash;
+    }
+    else {
+        currentWeaponHash = 0;
+    }
+    WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
     AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
 
@@ -386,7 +394,9 @@ void UpdateFob() {
         fob = 0;
         fobPlaying = false;
         fobBlop = false;
-        WEAPON::SET_PED_CURRENT_WEAPON_VISIBLE(PLAYER::PLAYER_PED_ID(), true, false, true, true);
+        if (currentWeaponHash) {
+            WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), currentWeaponHash, true);
+        }
     }
 }
 
