@@ -2,6 +2,7 @@
 
 ## v1.1.2
 * Recompile, fixes menu locking out player selection
+* Fix ambient music disappearing when opening the menu
 * Add blip option for cars
 * Detect current radio station
 * Hide weapon instead of switching to unarmed
