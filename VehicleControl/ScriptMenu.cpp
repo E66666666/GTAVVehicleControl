@@ -5,6 +5,7 @@
 #include "Util/StringFormat.h"
 #include "Util/UIUtils.h"
 #include "ManagedVehicle.h"
+#include "Settings.h"
 
 const int NumDoors = 6;
 const int NumWindows = 4;
@@ -19,6 +20,7 @@ extern Vehicle lastVehicle;
 extern std::vector<ManagedVehicle> managedVehicles;
 extern int OffStationIndex;
 extern bool CanUseNeonNative;
+extern Settings g_settings;
 
 int currentVehicleIndex = 0;
 bool pendingExtern = false;
@@ -38,6 +40,20 @@ std::unordered_map<std::string, std::pair<int, std::string>> RadioStations;
 std::vector<std::string> RadioStationNames; // GXT names
 
 static void _DISABLE_VEHICLE_NEON_LIGHTS(Vehicle vehicle, BOOL disable) { invoke<Void>(0x83F813570FF519DE, vehicle, disable); }
+
+float g_steerBias = 0.0f;
+
+namespace {
+    template <typename T, typename = typename std::enable_if<std::is_floating_point<T>::value, T>::type>
+    constexpr T rad2deg(T rad) {
+        return static_cast<T>(static_cast<double>(rad) * (180.0 / 3.14159265358979323846));
+    }
+
+    template <typename T, typename = typename std::enable_if<std::is_floating_point<T>::value, T>::type>
+    constexpr T deg2rad(T deg) {
+        return static_cast<T>(static_cast<double>(deg) * 3.14159265358979323846 / 180.0);
+    }
+}
 
 enum class LockStatus : int {
     None,
@@ -600,6 +616,16 @@ void update_remotefunctionsmenu() {
             pendingTaskSequence.push_back([=]() { VEHICLE::SET_VEHICLE_SIREN(veh, !isSirenOn); });
             PlayFobAnim(false, true);
         }
+    }
+
+    uint8_t* vehAddr = getScriptHandleBaseAddress(veh);
+    float steerAngle = rad2deg(*(float*)(&vehAddr[g_settings.OffsetSteerAngle]));
+    if (menu.FloatOption("Steering angle", steerAngle, -90.0f, 90.0f, 0.5f)) {
+        *(float*)(&vehAddr[g_settings.OffsetSteerAngle]) = deg2rad(steerAngle);
+
+        uint8_t* handlingAddr = &vehAddr[g_settings.OffsetHandling];
+        float limitRadians = *(float*)(&handlingAddr[g_settings.OffsetHandlingSteeringAngle]);
+        *(float*)(&vehAddr[g_settings.OffsetSteerInput]) = deg2rad(steerAngle) * (1.0f / limitRadians);
     }
 }
 
