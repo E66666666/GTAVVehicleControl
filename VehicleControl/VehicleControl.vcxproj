@@ -160,6 +160,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="ScriptMenu.cpp" />
+    <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="Util\Paths.cpp" />
     <ClCompile Include="Util\StringFormat.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="Blip.h" />
     <ClInclude Include="ManagedVehicle.h" />
     <ClInclude Include="script.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="Util\Logger.hpp" />
     <ClInclude Include="Util\Paths.h" />
     <ClInclude Include="Util\StringFormat.h" />

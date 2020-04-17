@@ -37,6 +37,7 @@
     <ClCompile Include="..\thirdparty\GTAVMenuBase\menuutils.cpp">
       <Filter>MenuBase</Filter>
     </ClCompile>
+    <ClCompile Include="Settings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="script.h" />
@@ -70,6 +71,7 @@
     <ClInclude Include="..\thirdparty\ScriptHookV_SDK\inc\main.h">
       <Filter>SDK</Filter>
     </ClInclude>
+    <ClInclude Include="Settings.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

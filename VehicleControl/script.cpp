@@ -9,10 +9,12 @@
 #include "Versions.h"
 #include "ManagedVehicle.h"
 #include "Util/StringFormat.h"
+#include "Settings.h"
 
 // TODO: Control trailer
 // TODO: Get in as passenger
 
+Settings g_settings;
 bool CanUseNeonNative = false;
 
 NativeMenu::Menu menu;
@@ -82,8 +84,11 @@ void update_managedVehicles() {
 
 void main() {
     CanUseNeonNative = getGameVersion() >= G_VER_1_0_573_1_STEAM;
-	AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
     logger.Write(INFO, "Script started");
+    g_settings.Load();
+
+    if (g_settings.MPAudio)
+        AUDIO::SET_AUDIO_FLAG("LoadMPData", true);
 
     settingsMenuFile = Paths::GetModuleFolder(Paths::GetOurModuleHandle()) + modDir + "\\settings_menu.ini";
     menu.SetFiles(settingsMenuFile);
