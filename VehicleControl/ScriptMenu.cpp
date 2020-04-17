@@ -278,7 +278,7 @@ void initRadioStations() {
 }
 
 std::string getGxtName(Hash hash) {
-    char *name = VEHICLE::GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(hash);
+    const char *name = VEHICLE::GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(hash);
     std::string displayName = UI::_GET_LABEL_TEXT(name);
     if (displayName == "NULL") {
         displayName = name;
@@ -511,7 +511,7 @@ void update_remotefunctionsmenu() {
         if (VEHICLE::IS_THIS_MODEL_A_PLANE(model)) {
             pendingTaskSequence.push_back([=]() { VEHICLE::_SET_VEHICLE_JET_ENGINE_ON(veh, true); });
         }
-        pendingTaskSequence.push_back([=]() { VEHICLE::SET_VEHICLE_ENGINE_ON(veh, !lIsEngineRunning, true, true); });
+        pendingTaskSequence.push_back([=]() { VEHICLE::SET_VEHICLE_ENGINE_ON(veh, !lIsEngineRunning, false, false); });
         PlayFobAnim(!lIsEngineRunning);
     }
 

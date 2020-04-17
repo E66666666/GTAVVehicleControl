@@ -1,0 +1,3 @@
+[submodule "thirdparty/GTAVMenuBase"]
+	path = thirdparty/GTAVMenuBase
+	url = https://github.com/E66666666/GTAVMenuBase

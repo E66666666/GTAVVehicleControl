@@ -92,6 +92,7 @@ void main() {
 
     menu.RegisterOnMain(std::bind(onMain));
     menu.RegisterOnExit(std::bind(onExit));
+    menu.Initialize();
 
     initRadioStations();
 
