@@ -283,9 +283,9 @@ void onExit() {
 
 void initRadioStations() {
     for (int i = 0; i < 256; i++) {
-        if (strcmp(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)), "NULL") != 0) {
-            RadioStations.try_emplace(std::string(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i))), make_pair(i, std::string(AUDIO::GET_RADIO_STATION_NAME(i)) ));
-            RadioStationNames.push_back(UI::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)));
+        if (strcmp(HUD::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)), "NULL") != 0) {
+            RadioStations.try_emplace(std::string(HUD::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i))), make_pair(i, std::string(AUDIO::GET_RADIO_STATION_NAME(i)) ));
+            RadioStationNames.push_back(HUD::_GET_LABEL_TEXT(AUDIO::GET_RADIO_STATION_NAME(i)));
         }
     }
     RadioStations.try_emplace("Radio Off", std::make_pair( 255, "OFF" ));
@@ -295,7 +295,7 @@ void initRadioStations() {
 
 std::string getGxtName(Hash hash) {
     const char *name = VEHICLE::GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(hash);
-    std::string displayName = UI::_GET_LABEL_TEXT(name);
+    std::string displayName = HUD::_GET_LABEL_TEXT(name);
     if (displayName == "NULL") {
         displayName = name;
     }
@@ -306,11 +306,11 @@ std::pair<std::string, std::string> GetVehicleNames(Vehicle vehicle) {
     Hash modelHash = ENTITY::GET_ENTITY_MODEL(vehicle);
     char* makeName = "NULL";//GetVehicleMakeName(modelHash);
     std::string makeFinal;
-    if (strcmp(UI::_GET_LABEL_TEXT(makeName), "NULL") == 0) {
+    if (strcmp(HUD::_GET_LABEL_TEXT(makeName), "NULL") == 0) {
         makeFinal = "";
     }
     else {
-        makeFinal = std::string(UI::_GET_LABEL_TEXT(makeName));
+        makeFinal = std::string(HUD::_GET_LABEL_TEXT(makeName));
     }
 
     return std::make_pair<std::string, std::string>(makeName, getGxtName(modelHash));
@@ -359,7 +359,7 @@ void PlayFobAnim(bool beepOn, bool mute = false) {
 
     auto coords =  ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), 0);
     if (fob == 0) {
-        fob = OBJECT::CREATE_OBJECT(GAMEPLAY::GET_HASH_KEY("lr_prop_carkey_fob"), coords.x, coords.y, coords.z, true, false, false);
+        fob = OBJECT::CREATE_OBJECT(MISC::GET_HASH_KEY("lr_prop_carkey_fob"), coords.x, coords.y, coords.z, true, false, false);
         ENTITY::ATTACH_ENTITY_TO_ENTITY(fob, PLAYER::PLAYER_PED_ID(), PED::GET_PED_BONE_INDEX(PLAYER::PLAYER_PED_ID(), 28422), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1, 0, 0, 0, 2, 1);
     }
 
@@ -374,8 +374,8 @@ void PlayFobAnim(bool beepOn, bool mute = false) {
     else {
         currentWeaponHash = 0;
     }
-    WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), GAMEPLAY::GET_HASH_KEY("weapon_unarmed"), false);
-    AI::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
+    WEAPON::SET_CURRENT_PED_WEAPON(PLAYER::PLAYER_PED_ID(), MISC::GET_HASH_KEY("weapon_unarmed"), false);
+    TASK::TASK_PLAY_ANIM(PLAYER::PLAYER_PED_ID(), "anim@mp_player_intmenu@key_fob@", "fob_click", 8.0f, -8.0f, -1, 16 | 32, 0, 0, 0, 0);
 }
 
 void UpdateFob() {
@@ -533,7 +533,7 @@ void update_remotefunctionsmenu() {
 
     int lastRadio = mVeh.RadioMenuIndex;
     auto radioDescription = OptionRadioDescription;
-    const char* stationName = UI::_GET_LABEL_TEXT((char*)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
+    const char* stationName = HUD::_GET_LABEL_TEXT((char*)RadioStations[RadioStationNames[mVeh.RadioIndex]].second.c_str());
     radioDescription.push_back(fmt("Last tuned to %s", RadioStationNames[mVeh.RadioIndex].c_str()));
     if (menu.StringArray(OptionRadio, RadioStationNames, mVeh.RadioMenuIndex, radioDescription)) {
         if (lastRadio == mVeh.RadioMenuIndex) {
